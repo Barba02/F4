@@ -6,14 +6,15 @@ SERVER_SRCS=$(LIBS) src/F4Server.c
 CLIENT_SRCS=$(LIBS) src/F4Client.c
 SERVER_OBJS=$(SERVER_SRCS:.c=.o)
 CLIENT_OBJS=$(CLIENT_SRCS:.c=.o)
+EXECUTABLES=F4Server F4Client
 
-all: server client
+all: $(EXECUTABLES)
 
-server: $(SERVER_OBJS)
+F4Server: $(SERVER_OBJS)
 	@echo "Making executable: "$@
 	@$(CC) $^ -o $@
 
-client: $(CLIENT_OBJS)
+F4Client: $(CLIENT_OBJS)
 	@echo "Making executable: "$@
 	@$(CC) $^ -o $@
 
@@ -22,5 +23,5 @@ client: $(CLIENT_OBJS)
 	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 clean:
-	@rm -f src/*.o client server
+	@rm -f src/*.o $(EXECUTABLES)
 	@echo "Removed object files and executables..."
