@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -9,15 +10,24 @@
 #include "errExit.h"
 
 int rows, cols;
-char p1_sign, p2_sign;
+char p1_sign = ' ', p2_sign = ' ';
+
+// signs assignment function
+char random_char() {
+    // if X has already given to p1 or chosen by the user, returns O
+    if (toupper(p1_sign) == 'X')
+        return 'O';
+    // return X in the other cases
+    return 'X';
+}
 
 // function to check if player signs are valid
 int chk_string_arg(char* s) {
     // sign must be a single character
     if (strlen(s) != 1)
         return 0;
-    // sign cannot be |, -, _
-    if (*s == '|' || *s == '_' || *s == '-')
+    // sign cannot be '|', '-', '_', ' '
+    if (*s == '|' || *s == '_' || *s == '-' || *s == ' ')
         return 0;
     // sign is ok
     return 1;
@@ -63,10 +73,16 @@ int main (int argc, char *argv[]) {
             printf("Rows and columns arguments must be numbers greater or equal to 5\n");
             return 1;
         case 2:
-            printf("Player signs must be single characters, excluded '|', '_' and '-'\n");
+            printf("Player signs must be single characters, excluded '|', '-', '_', ' '\n");
             return 1;
         }
     }
+
+    // player signs assignment
+    if (p1_sign == ' ')
+        p1_sign = random_char();
+    if (p2_sign == ' ')
+        p2_sign = random_char();
 
     return 0;
 }
