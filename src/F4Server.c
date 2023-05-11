@@ -9,8 +9,22 @@
 #include <sys/stat.h>
 #include "errExit.h"
 
-int rows, cols;
+int rows, cols, catcher = 0;
 char p1_sign = ' ', p2_sign = ' ';
+void sig_handler(int sig);
+
+//function that catches Ctrl-C type with a SigHandler
+void sigHandler(int sig) {
+    
+    if(catcher == 0)
+    {
+        printf("The signal %s was caught! \n", (sig == SIGINT)? "Ctrl-C" : "signal User-1"); 
+        catcher++;
+        
+    }
+
+}
+
 
 // signs assignment function
 char random_char() {
@@ -61,6 +75,14 @@ int chk_args(int n, char** args) {
 }
 
 int main (int argc, char *argv[]) {
+
+    // setting sigHandler to be executed for SIGINT or SIGUSR1
+    if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGUSR1, sigHandler) == SIG_ERR) {
+        errExit("change signal handler failed");
+    }
+    
+    pause();
+
     // check command line arguments number
 	if (argc < 3 || argc > 5) {
         printf("Usage: %s <rows> <columns> [player1 sign] [player2 sign]\n", argv[0]);
