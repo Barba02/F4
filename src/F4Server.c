@@ -11,7 +11,7 @@
 #include <sys/stat.h>
 #include "errExit.h"
 
-int rows, cols, catcher = 0;
+int rows, cols, catcher = 0; // TODO: reset counter a ogni input
 char p1_sign = ' ', p2_sign = ' ';
 
 // setting terminal behaviour to not print ^C and restore at the end
@@ -30,7 +30,7 @@ void clear_terminal() {
 // catches SIGINT and manage closing
 void sigIntHandler(int sig) {
     if (++catcher == 2) {
-        /* TODO: chiusura memoria e semafori */
+        // TODO: chiusura memoria e semafori
         exit(0);
     }
     else
@@ -108,8 +108,6 @@ int main (int argc, char *argv[]) {
             return 1;
         }
     }
-
-    while(1) {} // testing doppio ctrl+c
 
     // player signs assignment
     if (p1_sign == ' ')
