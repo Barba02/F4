@@ -74,6 +74,7 @@ int chk_args(int n, char** args) {
     return 0;
 }
 
+
 int main (int argc, char *argv[]) {
 
     // setting sigHandler to be executed for SIGINT or SIGUSR1
