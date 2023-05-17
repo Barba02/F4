@@ -1,0 +1,2 @@
+chiave hardcoded per controllo campi precedenti
+quando un segnale viene gestito, viene poi resettato al suo comportamento inziale https://stackoverflow.com/questions/75176945/why-is-my-signal-handler-not-working-when-i-send-two-sigint-signals-ctrl-c
