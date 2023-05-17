@@ -1,3 +1,4 @@
+#include <fcntl.h>
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
@@ -6,25 +7,36 @@
 #include <signal.h>
 #include <unistd.h>
 #include <sys/msg.h>
+#include <termios.h>
 #include <sys/stat.h>
 #include "errExit.h"
 
 int rows, cols, catcher = 0;
 char p1_sign = ' ', p2_sign = ' ';
-void sig_handler(int sig);
 
-//function that catches Ctrl-C type with a SigHandler
-void sigHandler(int sig) {
-    
-    if(catcher == 0)
-    {
-        printf("The signal %s was caught! \n", (sig == SIGINT)? "Ctrl-C" : "signal User-1"); 
-        catcher++;
-        
-    }
-
+// setting terminal behaviour to not print ^C and restore at the end
+struct termios save;
+void reset_terminal() {
+    tcsetattr(0, 0, &save);
+}
+void clear_terminal() {
+    tcgetattr(0, &save);
+    struct termios new = save;
+    new.c_lflag &= ~ECHOCTL;
+    tcsetattr(0, 0, &new);
+    atexit(reset_terminal);
 }
 
+// catches SIGINT and manage closing
+void sigIntHandler(int sig) {
+    if (++catcher == 2) {
+        /* TODO: chiusura memoria e semafori */
+        exit(0);
+    }
+    else
+        if (signal(SIGINT, sigIntHandler) == SIG_ERR)
+            errExit("Cannot change signal handler");
+}
 
 // signs assignment function
 char random_char() {
@@ -74,15 +86,11 @@ int chk_args(int n, char** args) {
     return 0;
 }
 
-
 int main (int argc, char *argv[]) {
-
-    // setting sigHandler to be executed for SIGINT or SIGUSR1
-    if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGUSR1, sigHandler) == SIG_ERR) {
-        errExit("change signal handler failed");
-    }
-    
-    pause();
+    // setting SIGINT handling
+    clear_terminal();
+    if (signal(SIGINT, sigIntHandler) == SIG_ERR)
+        errExit("Cannot change signal handler");
 
     // check command line arguments number
 	if (argc < 3 || argc > 5) {
@@ -100,6 +108,8 @@ int main (int argc, char *argv[]) {
             return 1;
         }
     }
+
+    while(1) {} // testing doppio ctrl+c
 
     // player signs assignment
     if (p1_sign == ' ')
