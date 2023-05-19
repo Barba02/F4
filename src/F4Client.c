@@ -5,39 +5,21 @@
 #include <stdlib.h>
 #include <sys/msg.h>
 #include <sys/stat.h>
-#include "errExit.h"
+#include "../inc/shared_memory.h"
+#include "../inc/errExit.h"
+#include "../inc/game.h"
+
+#define matrix_game_key 67890
 
 int main (int argc, char *argv[]) {
-    //matrix generation test
-    int i, j;
-    int rows = atoi(argv[1]);
-    int cols = atoi(argv[2]);
-    int matrix[rows][cols];
-    for (i = 0; i < rows; i++) {
-        for (j = 0; j < cols; j++) {
-            matrix[i][j] = rand() % 2;
-        }
-    }
-    for (i = 0; i < rows+1; i++) {
-        for (j = 0; j < cols+1; j++) 
-        {
-                if(j==cols)
-                {
-                    printf("|");
-                }
-                else
-                    printf("| %i ", matrix[i][j]);
-                    
-        }
-        printf("\n");
-        for(int x=0; x < cols+1; x++)
-        {
-            printf("- - ");
-        }
-        printf("\n");
-        
-        
-    }
+    //TODO: passare righe, colonne e segni utilizzati dai 2 giocatori
+    //attach to matrix game
+    int shmid;
+    size_t size = sizeof(int[5][5]);
+    int (*matrix_game)[5];
+    shmid = alloc_shared_memory(matrix_game_key,size);
+    matrix_game = get_shared_memory(shmid,0);
+
     
     return 0;
 }

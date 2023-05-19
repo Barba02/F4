@@ -1,8 +1,8 @@
 #include <sys/shm.h>
 #include <sys/stat.h>
 
-#include "errExit.h"
-#include "shared_memory.h"
+#include "../inc/errExit.h"
+#include "../inc/shared_memory.h"
 
 int alloc_shared_memory(key_t shmKey, size_t size) {
     int shmid = shmget(shmKey, size, IPC_CREAT | S_IRWXU);

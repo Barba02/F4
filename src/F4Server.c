@@ -9,7 +9,10 @@
 #include <sys/msg.h>
 #include <termios.h>
 #include <sys/stat.h>
-#include "errExit.h"
+#include "../inc/shared_memory.h"
+#include "../inc/errExit.h"
+
+#define matrix_game_key 67890
 
 int rows, cols, catcher = 0; // TODO: reset counter a ogni input
 char p1_sign = ' ', p2_sign = ' ';
@@ -114,6 +117,15 @@ int main (int argc, char *argv[]) {
         p1_sign = random_char();
     if (p2_sign == ' ')
         p2_sign = random_char();
+
+    //initialize shared memory for matrix game
+    int shmid;
+    size_t size = sizeof(int[rows][cols]);
+    int (*matrix_game)[cols];
+    //TODO: modificare funzione di allocazione per il server (deve dare errore se già allocata)
+    shmid = alloc_shared_memory(matrix_game_key,size);
+    matrix_game = get_shared_memory(shmid,0);
+
 
     return 0;
 }
