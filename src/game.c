@@ -1,3 +1,7 @@
+#include "../inc/game.h"
+#include <stdio.h>
+
+//print game matrix
 void print_game(int rows, int cols, int mat[rows][cols], char  p1_sign, char p2_sign){
     for(int i=0;i<=rows;i++){
         for(int j=0;j<cols;j++){
