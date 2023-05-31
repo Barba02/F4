@@ -3,6 +3,14 @@
 
 #include <stdlib.h>
 
+typedef struct game{
+    int rows;
+    int cols;
+    char p1_sign;
+    char p2_sign;
+    int **matrix_game;
+} game_t;
+
 int alloc_shared_memory(key_t shmKey, size_t size);
 
 void *get_shared_memory(int shmid, int shmflg);
