@@ -5,34 +5,27 @@
 #include <stdlib.h>
 #include <sys/msg.h>
 #include <sys/stat.h>
-#include "../inc/shared_memory.h"
-#include "../inc/errExit.h"
-#include "../inc/game.h"
+#include "shared_memory.h"
+#include "errExit.h"
 
 #define matrix_game_key 67890
 
-// function to check if player signs are valid
-int chk_string_arg(char* s) {
-    // flag must be "-auto"
-    if (strcmp(s,"-auto") != 0)
-        return 0;
-    // sign is ok
-    return 1;
-}
-
 int main (int argc, char *argv[]) {
+    int autoplay;
+    char *username; // forse da mettere in memoria condivisa
 
     // check command line arguments number
     if (argc < 2 || argc > 3) {
-        printf("Usage: %s <username> [flag] \n", argv[0]);
+        printf("Usage: %s <username> [autoPlay]\n", argv[0]);
         return 1;
     }
+    // validation of the arguments
+    else {
+        username = argv[1];
+        autoplay = (argc == 3 && strcmp(argv[2], "1") == 0) ? 1 : 0;
+    }
 
-    if(argc == 3){
-        if(!chk_string_arg(argv[2])){
-            printf("Usage: %s <username> -auto \n", argv[0]);
-            return 1;
-        }
+    if (autoplay) {
         //TODO: gioco automatico con un bot
     }
 
