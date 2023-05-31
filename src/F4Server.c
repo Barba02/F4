@@ -9,8 +9,8 @@
 #include <sys/msg.h>
 #include <termios.h>
 #include <sys/stat.h>
-#include "../inc/shared_memory.h"
-#include "../inc/errExit.h"
+#include "shared_memory.h"
+#include "errExit.h"
 
 #define matrix_game_key 67890
 
