@@ -1,4 +1,4 @@
-#include "../inc/game.h"
+#include "game.h"
 #include <stdio.h>
 
 //print game matrix

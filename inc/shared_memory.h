@@ -3,7 +3,9 @@
 
 #include <stdlib.h>
 
-typedef struct game{
+#define GAME_KEY 67890
+
+typedef struct game {
     int rows;
     int cols;
     char p1_sign;
@@ -11,9 +13,9 @@ typedef struct game{
     int **matrix_game;
 } game_t;
 
-int alloc_shared_memory(key_t shmKey, size_t size);
+int alloc_shared_memory(size_t size);
 
-void *get_shared_memory(int shmid, int shmflg);
+void *get_shared_memory(int shmid);
 
 void free_shared_memory(void *ptr_sh);
 

@@ -1,18 +1,18 @@
 #include <sys/shm.h>
 #include <sys/stat.h>
 
-#include "../inc/errExit.h"
-#include "../inc/shared_memory.h"
+#include "errExit.h"
+#include "shared_memory.h"
 
-int alloc_shared_memory(key_t shmKey, size_t size) {
-    int shmid = shmget(shmKey, size, IPC_CREAT | S_IRWXU);
+int alloc_shared_memory(size_t size) {
+    int shmid = shmget(GAME_KEY, size, IPC_CREAT | S_IRWXU);
     if (shmid == -1)
         errExit("Cannot allocate shared memory segment");
     return shmid;
 }
 
-void *get_shared_memory(int shmid, int shmflg) {
-    void *ptr = shmat(shmid, NULL, shmflg);
+void *get_shared_memory(int shmid) {
+    void *ptr = shmat(shmid, NULL, 0);
     if (ptr == (void *)-1)
         errExit("shmat failed");
     return ptr;

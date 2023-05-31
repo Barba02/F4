@@ -12,10 +12,8 @@
 #include "shared_memory.h"
 #include "errExit.h"
 
-#define matrix_game_key 67890
-
-int rows, cols, catcher = 0; // TODO: reset counter a ogni input
-char p1_sign = ' ', p2_sign = ' ';
+int shmid, rows, cols, catcher = 0; // TODO: reset counter a ogni input
+game_t* game_table;
 
 // setting terminal behaviour to not print ^C and restore at the end
 struct termios save;
@@ -44,7 +42,7 @@ void sigIntHandler(int sig) {
 // signs assignment function
 char random_char() {
     // if X has already given to p1 or chosen by the user, returns O
-    if (toupper(p1_sign) == 'X')
+    if (toupper(game_table->p1_sign) == 'X')
         return 'O';
     // return X in the other cases
     return 'X';
@@ -77,13 +75,13 @@ int chk_args(int n, char** args) {
     if (n >= 4) {
         if (!chk_string_arg(args[3]))
             return 2;
-        p1_sign = *args[3];
+        game_table->p1_sign = *args[3];
     }
     // check optional player2 sign
     if (n == 5) {
         if (!chk_string_arg(args[4]))
             return 2;
-        p2_sign = *args[4];
+        game_table->p2_sign = *args[4];
     }
     // arguments are ok
     return 0;
@@ -94,6 +92,11 @@ int main (int argc, char *argv[]) {
     clear_terminal();
     if (signal(SIGINT, sigIntHandler) == SIG_ERR)
         errExit("Cannot change signal handler");
+
+    // initialize shared memory for game table
+    shmid = alloc_shared_memory(sizeof(game_t));
+    game_table = (game_t*) get_shared_memory(shmid);
+    // TODO: modificare funzione di allocazione per il server (deve dare errore se già allocata)
 
     // check command line arguments number
 	if (argc < 3 || argc > 5) {
@@ -113,19 +116,13 @@ int main (int argc, char *argv[]) {
     }
 
     // player signs assignment
-    if (p1_sign == ' ')
-        p1_sign = random_char();
-    if (p2_sign == ' ')
-        p2_sign = random_char();
+    if (game_table->p1_sign == '\0')
+        game_table->p1_sign = random_char();
+    if (game_table->p2_sign == '\0')
+        game_table->p2_sign = random_char();
 
-    //initialize shared memory for matrix game
-    int shmid;
-    size_t size = sizeof(int[rows][cols]);
-    int (*matrix_game)[cols];
-    //TODO: modificare funzione di allocazione per il server (deve dare errore se già allocata)
-    shmid = alloc_shared_memory(matrix_game_key,size);
-    matrix_game = get_shared_memory(shmid,0);
-
+    free_shared_memory(game_table);
+    remove_shared_memory(shmid);
 
     return 0;
 }

@@ -8,7 +8,8 @@
 #include "shared_memory.h"
 #include "errExit.h"
 
-#define matrix_game_key 67890
+int shmid;
+game_t* game_table;
 
 int main (int argc, char *argv[]) {
     int autoplay;
@@ -25,18 +26,14 @@ int main (int argc, char *argv[]) {
         autoplay = (argc == 3 && strcmp(argv[2], "1") == 0) ? 1 : 0;
     }
 
+    //TODO: passare righe, colonne e segni utilizzati dai 2 giocatori
+    //attach to matrix game
+    shmid = alloc_shared_memory(sizeof(game_t));
+    game_table = (game_t*) get_shared_memory(shmid);
+
     if (autoplay) {
         //TODO: gioco automatico con un bot
     }
-
-    //TODO: passare righe, colonne e segni utilizzati dai 2 giocatori
-    //attach to matrix game
-    int shmid;
-    size_t size = sizeof(int[5][5]);
-    int (*matrix_game)[5];
-    shmid = alloc_shared_memory(matrix_game_key,size);
-    matrix_game = get_shared_memory(shmid,0);
-
     
     return 0;
 }
