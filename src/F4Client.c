@@ -11,13 +11,15 @@
 #include "errExit.h"
 #include "game.h"
 
-int shmid;
+int shmid,shmid_matrix;
 game_t* game_data;
+int **matrix_game;
 
 // catches SIGUSR1
 void sigUsr1Handler(int sig) {
     printf("Avversario trovato, è il turno.\n");
-    //TODO: iniziare il gioco
+    // start game
+    F4_game(game_data,matrix_game);
 }
 
 int main (int argc, char *argv[]) {
@@ -40,9 +42,12 @@ int main (int argc, char *argv[]) {
     }
 
     //TODO: passare righe, colonne e segni utilizzati dai 2 giocatori
-    //attach to matrix game
+    //attach to game data
     shmid = alloc_shared_memory(sizeof(game_t), GAME_KEY);
     game_data = (game_t*) get_shared_memory(shmid);
+    //attach to game matrix
+    shmid_matrix = alloc_shared_memory(sizeof(int[game_data->rows][game_data->cols]),MATRIX_KEY);
+    matrix_game = get_shared_memory(shmid_matrix);
 
     //check if there is already a user connected
     if(game_data->client1_pid == -1) {
@@ -62,8 +67,7 @@ int main (int argc, char *argv[]) {
     else
         kill(game_data->server_pid,SIGUSR2);
 
-
-    //print_game(game_data->rows,game_data->cols,game_data->matrix_game,game_data->p1_sign,game_data->p2_sign);
+    while (1);
 
     if (autoplay) {
         //TODO: gioco automatico con un bot
