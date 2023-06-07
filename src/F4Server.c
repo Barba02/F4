@@ -12,7 +12,7 @@
 #include "shared_memory.h"
 #include "errExit.h"
 
-int shmid, rows, cols, catcher = 0; // TODO: reset counter a ogni input
+int shmid, catcher = 0; // TODO: reset counter a ogni input
 game_t* game_data;
 
 // setting terminal behaviour to not print ^C and restore at the end
@@ -31,21 +31,21 @@ void clear_terminal() {
 // catches SIGINT and manage closing
 void sigIntHandler(int sig) {
     if (++catcher == 2) {
-        // TODO: chiusura memoria e semafori
+        // TODO: chiusura csemafori e memoria
         exit(0);
-    } else if (signal(SIGINT, sigIntHandler) == SIG_ERR)
-        errExit("Cannot change signal handler");
+    }
+    printf("Press CTRL+C another time to quit\n");
 }
 
 // catches SIGUSR1
 void sigUsr1Handler(int sig) {
-    printf("Utente 1 collegato.\n");
+    printf("User 1 connected\n");
     //TODO:Comunicare simbolo attribuito
 }
 
 // catches SIGUSR1
 void sigUsr2Handler(int sig) {
-    printf("Utente 2 collegato.\n");
+    printf("User 2 connected\n");
     kill(game_data->client1_pid,SIGUSR1);
     //TODO:Comunicare simbolo attribuito
 }
@@ -130,6 +130,9 @@ int main (int argc, char *argv[]) {
             return 1;
         }
     }
+
+    while(1);
+
     //set pids in shared struct
     game_data->server_pid = getpid();
     game_data->client1_pid = -1;

@@ -3,4 +3,4 @@
 
 void print_game(int rows, int cols, int **mat, char  p1_sign, char p2_sign);
 
-#endif //F4_GAME_H
+#endif
