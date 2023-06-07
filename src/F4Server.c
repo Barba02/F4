@@ -9,11 +9,14 @@
 #include <sys/msg.h>
 #include <termios.h>
 #include <sys/stat.h>
-#include "shared_memory.h"
 #include "errExit.h"
+#include "shared_memory.h"
 
-int shmid_game, shmid_matrix, catcher = 0; // TODO: reset counter a ogni input
-game_t* game_data;
+int catcher = 0; // counter to kill the process
+int shmid_data; // shared segment's id for game data
+game_t* game_data; // shared struct containing game data
+int shmid_matrix; // shared segment's id for game matrix
+// int (*game_matrix)[]; // shared matrix to play
 
 // setting terminal behaviour to not print ^C and restore at the end
 struct termios save;
@@ -31,7 +34,12 @@ void clear_terminal() {
 // catches SIGINT and manage closing
 void sigIntHandler(int sig) {
     if (++catcher == 2) {
-        // TODO: chiusura csemafori e memoria
+        // TODO: chiusura semafori
+        // TODO: chiusura client collegati
+        free_shared_memory(game_data);
+        remove_shared_memory(shmid_data);
+        // free_shared_memory(game_matrix);
+        remove_shared_memory(shmid_matrix);
         exit(0);
     }
     printf("Press CTRL+C another time to quit\n");
@@ -39,21 +47,19 @@ void sigIntHandler(int sig) {
 
 // catches SIGUSR1
 void sigUsr1Handler(int sig) {
-    printf("User 1 connected\n");
-    //TODO:Comunicare simbolo attribuito
+    printf("%s (%c) is ready to play\n", game_data->client1_username, game_data->client1_sign);
 }
 
-// catches SIGUSR1
+// catches SIGUSR2
 void sigUsr2Handler(int sig) {
-    printf("User 2 connected\n");
+    printf("%s (%c) is ready to play\n", game_data->client2_username, game_data->client2_sign);
     kill(game_data->client1_pid,SIGUSR1);
-    //TODO:Comunicare simbolo attribuito
 }
 
 // signs assignment function
 char random_char() {
     // if X has already given to p1 or chosen by the user, returns O
-    if (toupper(game_data->p1_sign) == 'X')
+    if (toupper(game_data->client1_sign) == 'X')
         return 'O';
     // return X in the other cases
     return 'X';
@@ -86,13 +92,13 @@ int chk_args(int n, char** args) {
     if (n >= 4) {
         if (!chk_string_arg(args[3]))
             return 2;
-        game_data->p1_sign = *args[3];
+        game_data->client1_sign = *args[3];
     }
     // check optional player2 sign
     if (n == 5) {
         if (!chk_string_arg(args[4]))
             return 2;
-        game_data->p2_sign = *args[4];
+        game_data->client2_sign = *args[4];
     }
     // arguments are ok
     return 0;
@@ -110,10 +116,9 @@ int main (int argc, char *argv[]) {
     if (signal(SIGUSR2, sigUsr2Handler) == SIG_ERR)
         errExit("Cannot change signal handler");
 
-    // initialize shared memory for game table
-    shmid_game = alloc_shared_memory(sizeof(game_t), GAME_KEY);
-    game_data = (game_t*) get_shared_memory(shmid_game);
-    // TODO: modificare funzione di allocazione per il server (deve dare errore se già allocata)
+    // initialize shared memory for game data
+    shmid_data = alloc_shared_memory(sizeof(game_t), GAME_KEY);
+    game_data = (game_t*) get_shared_memory(shmid_data);
 
     // check command line arguments number
 	if (argc < 3 || argc > 5) {
@@ -132,28 +137,23 @@ int main (int argc, char *argv[]) {
         }
     }
 
-    //set pids in shared struct
+    // player signs assignment
+    if (game_data->client1_sign == '\0')
+        game_data->client1_sign = random_char();
+    if (game_data->client2_sign == '\0')
+        game_data->client2_sign = random_char();
+
+    // initialize pids in shared struct
     game_data->server_pid = getpid();
     game_data->client1_pid = -1;
     game_data->client2_pid = -1;
-    // initialize shared memory for matrix game
-    int (*matrix_game)[game_data->cols];
-    shmid_matrix = alloc_shared_memory(sizeof(int[game_data->rows][game_data->cols]),MATRIX_KEY);
-    matrix_game = get_shared_memory(shmid_matrix);
 
-    // player signs assignment
-    if (game_data->p1_sign == '\0')
-        game_data->p1_sign = random_char();
-    if (game_data->p2_sign == '\0')
-        game_data->p2_sign = random_char();
+    // initialize shared memory for game matrix
+    int (*game_matrix)[game_data->cols]; // TODO: deve essere globale
+    shmid_matrix = alloc_shared_memory(sizeof(int[game_data->rows][game_data->cols]),MATRIX_KEY);
+    game_matrix = get_shared_memory(shmid_matrix);
 
     while (1);
-
-    // remove all ipcs
-    free_shared_memory(game_data);
-    remove_shared_memory(shmid_game);
-    free_shared_memory(matrix_game);
-    remove_shared_memory(shmid_matrix);
 
     return 0;
 }

@@ -11,20 +11,21 @@
 #include "errExit.h"
 #include "game.h"
 
-int shmid,shmid_matrix;
-game_t* game_data;
-int **matrix_game;
+int shmid_data; // shared segment's id for game data
+game_t* game_data; // shared struct containing game data
+int shmid_matrix; // shared segment's id for game matrix
+int (*game_matrix)[]; // shared matrix to play
 
 // catches SIGUSR1
 void sigUsr1Handler(int sig) {
-    printf("Avversario trovato, è il turno.\n");
+    printf("Other player found\n");
     // start game
-    F4_game(game_data,matrix_game);
+    F4_game(game_data, game_matrix);
 }
 
 int main (int argc, char *argv[]) {
     int autoplay;
-    char *username; // forse da mettere in memoria condivisa
+    char *username;
 
     // setting SIGUSR1 handling
     if (signal(SIGUSR1, sigUsr1Handler) == SIG_ERR)
@@ -41,27 +42,29 @@ int main (int argc, char *argv[]) {
         autoplay = (argc == 3 && strcmp(argv[2], "1") == 0) ? 1 : 0;
     }
 
-    //TODO: passare righe, colonne e segni utilizzati dai 2 giocatori
-    //attach to game data
-    shmid = alloc_shared_memory(sizeof(game_t), GAME_KEY);
-    game_data = (game_t*) get_shared_memory(shmid);
-    //attach to game matrix
-    shmid_matrix = alloc_shared_memory(sizeof(int[game_data->rows][game_data->cols]),MATRIX_KEY);
-    matrix_game = get_shared_memory(shmid_matrix);
+    // attach to game data
+    shmid_data = alloc_shared_memory(sizeof(game_t), GAME_KEY);
+    game_data = (game_t*) get_shared_memory(shmid_data);
 
-    //check if there is already a user connected
-    if(game_data->client1_pid == -1) {
+    // attach to game matrix
+    shmid_matrix = alloc_shared_memory(sizeof(int[game_data->rows][game_data->cols]),MATRIX_KEY);
+    game_matrix = get_shared_memory(shmid_matrix);
+
+    // check if this client is user 1 or 2
+    if (game_data->client1_pid == -1) {
         game_data->client1_pid = getpid();
+        game_data->client1_username = username;
     }
     else {
         game_data->client2_pid = getpid();
+        game_data->client2_username = username;
     }
 
     //notify server (check if is the first or second client)
-    if(getpid() == game_data->client1_pid) {
+    if (getpid() == game_data->client1_pid) {
         kill(game_data->server_pid, SIGUSR1);
         //first player wait for second player
-        printf("In attesa di un avversario...\n");
+        printf("Waiting for another player...\n");
         fflush(stdin);
     }
     else

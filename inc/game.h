@@ -1,5 +1,5 @@
-#ifndef F4_GAME_H
-#define F4_GAME_H
+#ifndef F4_GAME_HH
+#define F4_GAME_HH
 
 #include "shared_memory.h"
 

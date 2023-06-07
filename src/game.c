@@ -36,7 +36,7 @@ void F4_game(game_t *game_data,int matrix_game[game_data->rows][game_data->cols]
     int choice;
     while (1){
         // print matrix game
-        print_game(game_data->rows, game_data->cols, matrix_game, game_data->p1_sign, game_data->p2_sign);
+        print_game(game_data->rows, game_data->cols, matrix_game, game_data->client1_sign, game_data->client2_sign);
         // choice of column
         do{
             printf("Insert col [1,%i]: ",game_data->cols);

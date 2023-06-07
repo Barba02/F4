@@ -12,9 +12,10 @@ typedef struct game {
     pid_t client2_pid;
     int rows;
     int cols;
-    char p1_sign;
-    char p2_sign;
-    int **matrix_game;
+    char client1_sign;
+    char client2_sign;
+    char* client1_username;
+    char* client2_username;
 } game_t;
 
 int alloc_shared_memory(size_t size, key_t key);
@@ -24,6 +25,5 @@ void *get_shared_memory(int shmid);
 void free_shared_memory(void *ptr_sh);
 
 void remove_shared_memory(int shmid);
-
 
 #endif
