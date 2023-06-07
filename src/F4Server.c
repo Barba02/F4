@@ -113,7 +113,6 @@ int main (int argc, char *argv[]) {
     // initialize shared memory for game table
     shmid = alloc_shared_memory(sizeof(game_t), GAME_KEY);
     game_data = (game_t*) get_shared_memory(shmid);
-    // TODO: modificare funzione di allocazione per il server (deve dare errore se già allocata)
 
     // check command line arguments number
 	if (argc < 3 || argc > 5) {
