@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 #define GAME_KEY 67890
+#define MATRIX_KEY 54321
 
 typedef struct game {
     pid_t server_pid;
@@ -16,7 +17,7 @@ typedef struct game {
     int **matrix_game;
 } game_t;
 
-int alloc_shared_memory(size_t size);
+int alloc_shared_memory(size_t size, key_t key);
 
 void *get_shared_memory(int shmid);
 

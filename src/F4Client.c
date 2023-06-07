@@ -12,7 +12,7 @@
 #include "game.h"
 
 int shmid;
-game_t* game_table;
+game_t* game_data;
 
 // catches SIGUSR1
 void sigUsr1Handler(int sig) {
@@ -41,29 +41,29 @@ int main (int argc, char *argv[]) {
 
     //TODO: passare righe, colonne e segni utilizzati dai 2 giocatori
     //attach to matrix game
-    shmid = alloc_shared_memory(sizeof(game_t));
-    game_table = (game_t*) get_shared_memory(shmid);
+    shmid = alloc_shared_memory(sizeof(game_t), GAME_KEY);
+    game_data = (game_t*) get_shared_memory(shmid);
 
     //check if there is already a user connected
-    if(game_table->client1_pid == -1){
-        game_table->client1_pid=getpid();
+    if(game_data->client1_pid == -1) {
+        game_data->client1_pid = getpid();
     }
-    else{
-        game_table->client2_pid=getpid();
+    else {
+        game_data->client2_pid = getpid();
     }
 
     //notify server (check if is the first or second client)
-    if(getpid() == game_table->client1_pid) {
-        kill(game_table->server_pid, SIGUSR1);
+    if(getpid() == game_data->client1_pid) {
+        kill(game_data->server_pid, SIGUSR1);
         //first player wait for second player
         printf("In attesa di un avversario...\n");
         fflush(stdin);
     }
     else
-        kill(game_table->server_pid,SIGUSR2);
+        kill(game_data->server_pid,SIGUSR2);
 
 
-    //print_game(game_table->rows,game_table->cols,game_table->matrix_game,game_table->p1_sign,game_table->p2_sign);
+    //print_game(game_data->rows,game_data->cols,game_data->matrix_game,game_data->p1_sign,game_data->p2_sign);
 
     if (autoplay) {
         //TODO: gioco automatico con un bot

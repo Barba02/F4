@@ -4,8 +4,8 @@
 #include "errExit.h"
 #include "shared_memory.h"
 
-int alloc_shared_memory(size_t size) {
-    int shmid = shmget(GAME_KEY, size, IPC_CREAT | S_IRWXU);
+int alloc_shared_memory(size_t size, key_t key) {
+    int shmid = shmget(key, size, IPC_CREAT | S_IRWXU);
     if (shmid == -1)
         errExit("Cannot allocate shared memory segment");
     return shmid;
