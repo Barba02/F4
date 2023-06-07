@@ -11,4 +11,4 @@ void F4_game(game_t *game_data, int matrix_game[game_data->rows][game_data->cols
  */
 int play(game_t *game_data, int matrix_game[game_data->rows][game_data->cols], int choice,int player);
 
-#endif //F4_GAME_H
+#endif
