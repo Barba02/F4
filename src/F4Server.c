@@ -12,7 +12,7 @@
 #include "shared_memory.h"
 #include "errExit.h"
 
-int shmid_game,shmid_matrix, rows, cols, catcher = 0; // TODO: reset counter a ogni input
+int shmid_game, shmid_matrix, catcher = 0; // TODO: reset counter a ogni input
 game_t* game_data;
 
 // setting terminal behaviour to not print ^C and restore at the end
@@ -131,8 +131,6 @@ int main (int argc, char *argv[]) {
             return 1;
         }
     }
-
-    while(1);
 
     //set pids in shared struct
     game_data->server_pid = getpid();
