@@ -33,10 +33,21 @@ void sigIntHandler(int sig) {
     if (++catcher == 2) {
         // TODO: chiusura memoria e semafori
         exit(0);
-    }
-    else
-        if (signal(SIGINT, sigIntHandler) == SIG_ERR)
-            errExit("Cannot change signal handler");
+    } else if (signal(SIGINT, sigIntHandler) == SIG_ERR)
+        errExit("Cannot change signal handler");
+}
+
+// catches SIGUSR1
+void sigUsr1Handler(int sig) {
+    printf("Utente 1 collegato.\n");
+    //TODO:Comunicare simbolo attribuito
+}
+
+// catches SIGUSR1
+void sigUsr2Handler(int sig) {
+    printf("Utente 2 collegato.\n");
+    kill(game_table->client1_pid,SIGUSR1);
+    //TODO:Comunicare simbolo attribuito
 }
 
 // signs assignment function
@@ -64,12 +75,12 @@ int chk_string_arg(char* s) {
 int chk_args(int n, char** args) {
     char *ptr;
     // check that rows is a number >=5
-    rows = (int) strtol(args[1], &ptr, 10);
-    if (strlen(ptr) != 0 || rows < 5)
+    game_table->rows = (int) strtol(args[1], &ptr, 10);
+    if (strlen(ptr) != 0 || game_table->rows < 5)
         return 1;
     // check that columns is a number >=5
-    cols = (int) strtol(args[2], &ptr, 10);
-    if (strlen(ptr) != 0 || cols < 5)
+    game_table->cols = (int) strtol(args[2], &ptr, 10);
+    if (strlen(ptr) != 0 || game_table->cols < 5)
         return 1;
     // check optional player1 sign
     if (n >= 4) {
@@ -91,6 +102,12 @@ int main (int argc, char *argv[]) {
     // setting SIGINT handling
     clear_terminal();
     if (signal(SIGINT, sigIntHandler) == SIG_ERR)
+        errExit("Cannot change signal handler");
+    // setting SIGUSR1 handling
+    if (signal(SIGUSR1, sigUsr1Handler) == SIG_ERR)
+        errExit("Cannot change signal handler");
+    // setting SIGUSR2 handling
+    if (signal(SIGUSR2, sigUsr2Handler) == SIG_ERR)
         errExit("Cannot change signal handler");
 
     // initialize shared memory for game table
@@ -114,12 +131,20 @@ int main (int argc, char *argv[]) {
             return 1;
         }
     }
+    //set pids in shared struct
+    game_table->server_pid=getpid();
+    game_table->client1_pid=-1;
+    game_table->client2_pid=-1;
+    //alloc matrix game
+    game_table->matrix_game= (int **)malloc(game_table->rows * sizeof(int*));
+    for(int i = 0; i < game_table->rows; i++) game_table->matrix_game[i] = (int *)malloc(game_table->cols * sizeof(int));
 
     // player signs assignment
     if (game_table->p1_sign == '\0')
         game_table->p1_sign = random_char();
     if (game_table->p2_sign == '\0')
         game_table->p2_sign = random_char();
+    
 
     free_shared_memory(game_table);
     remove_shared_memory(shmid);

@@ -6,6 +6,9 @@
 #define GAME_KEY 67890
 
 typedef struct game {
+    pid_t server_pid;
+    pid_t client1_pid;
+    pid_t client2_pid;
     int rows;
     int cols;
     char p1_sign;

@@ -1,4 +1,8 @@
-chiave hardcoded per controllo campi precedenti
-quando un segnale viene gestito, viene poi resettato al suo comportamento inziale https://stackoverflow.com/questions/75176945/why-is-my-signal-handler-not-working-when-i-send-two-sigint-signals-ctrl-c
+-chiave hardcoded per controllo campi precedenti
+-quando un segnale viene gestito, viene poi resettato al suo comportamento inziale https://stackoverflow.com/questions/75176945/why-is-my-signal-handler-not-working-when-i-send-two-sigint-signals-ctrl-c
+-chiedere al prof per ./F4Client username *
+-capire come passare la matrice di gioco da un processo all'altro (malloc probabilmente alloca solo per server e client non vede)
+-aggiunta dei pid nella shared memory perchè servono per i segnali, nel server inizializzo a -1 i pid dei client cosi poi riesco a fare distinzione tra primo e secondo client
+-* aggiungere controllo che non si possano collegare più di due giocatori alla volta (lista di struct game_t)
+-aggiungere variabile (forse nella struct) per monitorare quanti utenti sono connessi in un preciso momento aggiornata dal server nel momento in cui viene notificato del collegamento/scollegamento
 
-chiedere al prof per ./F4Client username *
