@@ -14,8 +14,8 @@ typedef struct game {
     int cols;
     char client1_sign;
     char client2_sign;
-    char* client1_username;
-    char* client2_username;
+    char client1_username[25];
+    char client2_username[25];
 } game_t;
 
 int alloc_shared_memory(size_t size, key_t key);

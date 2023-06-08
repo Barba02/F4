@@ -25,7 +25,6 @@ void sigUsr1Handler(int sig) {
 
 int main (int argc, char *argv[]) {
     int autoplay;
-    char *username;
 
     // setting SIGUSR1 handling
     if (signal(SIGUSR1, sigUsr1Handler) == SIG_ERR)
@@ -38,7 +37,6 @@ int main (int argc, char *argv[]) {
     }
     // validation of the arguments
     else {
-        username = argv[1];
         autoplay = (argc == 3 && strcmp(argv[2], "1") == 0) ? 1 : 0;
     }
 
@@ -53,11 +51,11 @@ int main (int argc, char *argv[]) {
     // check if this client is user 1 or 2
     if (game_data->client1_pid == -1) {
         game_data->client1_pid = getpid();
-        game_data->client1_username = username;
+        strcpy(game_data->client1_username,argv[1]);
     }
     else {
         game_data->client2_pid = getpid();
-        game_data->client2_username = username;
+        strcpy(game_data->client2_username,argv[1]);
     }
 
     //notify server (check if is the first or second client)
