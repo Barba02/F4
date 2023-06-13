@@ -116,6 +116,8 @@ int main (int argc, char *argv[]) {
     if (signal(SIGUSR2, sigUsr2Handler) == SIG_ERR)
         errExit("Cannot change signal handler");
 
+    //TODO: inizializzare semafori
+
     // initialize shared memory for game data
     shmid_data = alloc_shared_memory(sizeof(game_t), GAME_KEY);
     game_data = (game_t*) get_shared_memory(shmid_data);

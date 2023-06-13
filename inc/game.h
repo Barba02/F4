@@ -10,5 +10,10 @@ void F4_game(game_t *game_data, int matrix_game[game_data->rows][game_data->cols
  * return -1: the column select is full
  */
 int play(game_t *game_data, int matrix_game[game_data->rows][game_data->cols], int choice,int player);
+/*
+ * return 1: win
+ * return 0: not win
+ */
+int check_win(game_t *game_data, int matrix_game[game_data->rows][game_data->cols]);
 
 #endif

@@ -57,7 +57,6 @@ void F4_game(game_t *game_data,int matrix_game[game_data->rows][game_data->cols]
                 scanf("%i",&choice);
             }
     }
-
 }
 
 int play(game_t *game_data, int matrix_game[game_data->rows][game_data->cols], int choice, int player){
@@ -72,3 +71,44 @@ int play(game_t *game_data, int matrix_game[game_data->rows][game_data->cols], i
     }
     return -1;
 }
+
+int check_win(game_t *game_data, int matrix_game[game_data->rows][game_data->cols]){
+    // Controlla vittoria orizzontale
+    for (int row = 0; row < game_data->rows; row++) {
+        for (int col = 0; col < game_data->cols - 3; col++) {
+            if (matrix_game[row][col] != 0 && matrix_game[row][col] == matrix_game[row][col + 1] && matrix_game[row][col] == matrix_game[row][col + 2] && matrix_game[row][col] == matrix_game[row][col + 3]) {
+                return 1; // Vittoria
+            }
+        }
+    }
+
+    // Controlla vittoria verticale
+    for (int row = 0; row < game_data->rows - 3; row++) {
+        for (int col = 0; col < game_data->cols; col++) {
+            if (matrix_game[row][col] != 0 && matrix_game[row][col] == matrix_game[row + 1][col] && matrix_game[row][col] == matrix_game[row + 2][col] && matrix_game[row][col] == matrix_game[row + 3][col]) {
+                return 1; // Vittoria
+            }
+        }
+    }
+
+    // Controlla vittoria diagonale (verso destra)
+    for (int row = 0; row < game_data->rows - 3; row++) {
+        for (int col = 0; col < game_data->cols - 3; col++) {
+            if (matrix_game[row][col] != 0 && matrix_game[row][col] == matrix_game[row + 1][col + 1] && matrix_game[row][col] == matrix_game[row + 2][col + 2] && matrix_game[row][col] == matrix_game[row + 3][col + 3]) {
+                return 1; // Vittoria
+            }
+        }
+    }
+
+    // Controlla vittoria diagonale (verso sinistra)
+    for (int row = 3; row < game_data->rows; row++) {
+        for (int col = 0; col < game_data->cols - 3; col++) {
+            if (matrix_game[row][col] != 0 && matrix_game[row][col] == matrix_game[row - 1][col + 1] && matrix_game[row][col] == matrix_game[row - 2][col + 2] && matrix_game[row][col] == matrix_game[row - 3][col + 3]) {
+                return 1; // Vittoria
+            }
+        }
+    }
+
+    return 0; // Nessun giocatore ha vinto
+}
+
