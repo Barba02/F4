@@ -3,59 +3,44 @@
 #include <unistd.h>
 
 //print game matrix
-void print_game(int rows, int cols, int mat[rows][cols], char  p1_sign, char p2_sign){
-    for(int i=0;i<=rows;i++){
-        for(int j=0;j<cols;j++){
-            // print the last row
-            if(i==rows){
-                printf("____");
-            }
-            else{
-                printf("|");
-                switch (mat[i][j]){
-                    case 0:
-                        printf("   ");
-                        break;
-                    case 1:
-                        printf(" %c ",p1_sign);
-                        break;
-                    case 2:
-                        printf(" %c ",p2_sign);
-                        break;
-                }
-                // print '|' for last column
-                if(j==cols-1)
-                    printf("|");
-            }
+void print_game(int rows, int cols, int mat[rows][cols], char  p1_sign, char p2_sign) {
+    // print cols numeration
+    printf("\n");
+    for (int i = 0; i < cols; i++)
+        printf("  %d ", i+1);
+    printf("\n");
+    // print matrix
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            printf("|");
+            if (mat[i][j] == 0)
+                printf("   ");
+            else
+                printf(" %c ", (mat[i][j] == 1) ? p1_sign : p2_sign);
+            if (j == cols-1)
+                printf("|\n");
         }
-        printf("\n");
     }
+    // print closing line
+    for (int i = 0; i < cols; i++)
+        printf("----");
+    printf("-\n");
 }
 
-void F4_game(game_t *game_data,int matrix_game[game_data->rows][game_data->cols]) {
-    int choice;
-    while (1){
+void F4_game(game_t *game_data, int matrix_game[game_data->rows][game_data->cols]) {
+    int choice, player, error = 0;
+    while (1) {
         // print matrix game
         print_game(game_data->rows, game_data->cols, matrix_game, game_data->client1_sign, game_data->client2_sign);
+        player = (getpid() == game_data->client1_pid) ? 1 : 2;
         // choice of column
-        do{
-            printf("Insert col [1,%i]: ",game_data->cols);
-            scanf("%i",&choice);
-        }
-        while(choice<1 || choice>game_data->cols);
-        // get the play (player1 or player2)
-        if(getpid() == game_data->client1_pid)
-            while(play(game_data,matrix_game,choice,1) == -1){
-                printf("The column selected is full, try again.\n");
-                printf("Insert col [1,%i]: ",game_data->cols);
-                scanf("%i",&choice);
-            }
-        else
-            while(play(game_data,matrix_game,choice,2) == -1){
-                printf("The column selected is full, try again.\n");
-                printf("Insert col [1,%i]: ",game_data->cols);
-                scanf("%i",&choice);
-            }
+        do {
+            if (error)
+                printf("Choosen column must be in the game range and not full\n");
+            printf("Insert column number: ");
+            scanf("%d", &choice);
+            error = (choice < 1 || choice > game_data->cols || play(game_data, matrix_game, choice, player) == -1);
+        } while (error);
     }
 }
 
