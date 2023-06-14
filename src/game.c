@@ -45,10 +45,12 @@ void F4_game(game_t *game_data, int matrix_game[game_data->rows][game_data->cols
 }
 
 int play(game_t *game_data, int matrix_game[game_data->rows][game_data->cols], int choice, int player){
+    game_data->last_player = player;
     //Scorro la colonna scelta a partire dal basso
     for(int i=game_data->rows-1;i>=0;i--){
         if(matrix_game[i][choice-1]==0){
-            matrix_game[i][choice-1]=player;
+            matrix_game[i][choice-1] = player;
+            game_data->n_played++;
             return 0;
         }
         else

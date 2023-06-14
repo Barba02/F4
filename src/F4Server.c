@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 #include "errExit.h"
 #include "shared_memory.h"
+#include "game.h"
 
 int catcher = 0; // counter to kill the process
 int shmid_data; // shared segment's id for game data
@@ -35,7 +36,10 @@ void clear_terminal() {
 void sigIntHandler(int sig) {
     if (++catcher == 2) {
         // TODO: chiusura semafori
-        // TODO: chiusura client collegati
+        // terminate connected clients
+        kill(game_data->client1_pid,SIGTERM);
+        kill(game_data->client2_pid,SIGTERM);
+
         free_shared_memory(game_data);
         remove_shared_memory(shmid_data);
         // free_shared_memory(game_matrix);
@@ -139,6 +143,9 @@ int main (int argc, char *argv[]) {
         }
     }
 
+    //initzialize play counter
+    game_data->n_played=0;
+
     // player signs assignment
     if (game_data->client1_sign == '\0')
         game_data->client1_sign = random_char();
@@ -155,7 +162,18 @@ int main (int argc, char *argv[]) {
     shmid_matrix = alloc_shared_memory(sizeof(int[game_data->rows][game_data->cols]),MATRIX_KEY);
     game_matrix = get_shared_memory(shmid_matrix);
 
-    while (1);
+    // continue until matrix are full or one player win
+    while (game_data->n_played<game_data->rows*game_data->cols && !check_win(game_data,game_matrix));
+
+    // terminate connected clients
+    kill(game_data->client1_pid,SIGTERM);
+    kill(game_data->client2_pid,SIGTERM);
+
+    // TODO: chiusura semafori
+    free_shared_memory(game_data);
+    remove_shared_memory(shmid_data);
+    // free_shared_memory(game_matrix);
+    remove_shared_memory(shmid_matrix);
 
     return 0;
 }

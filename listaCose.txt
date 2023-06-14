@@ -7,4 +7,5 @@
 -aggiungere variabile (forse nella struct) per monitorare quanti utenti sono connessi in un preciso momento aggiornata dal server nel momento in cui viene notificato del collegamento/scollegamento
 -il server si chiude se tra un ctrl+c e l'altro viene premuto altro?
 -nella struct game gli username hanno dimensione fissa senò segfault
--controllo della vittoria/pareggio deve essere fatto sul server
+-controllo della vittoria/pareggio essere fatto sul server
+-quando termina il server terminano anche il client (manca ancora la distinzione tra terminazione esterna o vittoria/pareggio)

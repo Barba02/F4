@@ -23,11 +23,25 @@ void sigUsr1Handler(int sig) {
     F4_game(game_data, game_matrix);
 }
 
+// catches SIGTERM
+void sigTermHandler(int sig) {
+    printf("\nGAME OVER : ");
+    if(game_data->n_played == game_data->rows*game_data->cols)
+        printf("DRAW\n");
+    else
+        printf("%s WIN!\n",(game_data->last_player == 1)? game_data->client1_username : game_data->client2_username);
+    exit(0);
+}
+
 int main (int argc, char *argv[]) {
     int autoplay;
 
     // setting SIGUSR1 handling
     if (signal(SIGUSR1, sigUsr1Handler) == SIG_ERR)
+        errExit("Cannot change signal handler");
+
+    // setting SIGUSR1 handling
+    if (signal(SIGTERM, sigTermHandler) == SIG_ERR)
         errExit("Cannot change signal handler");
 
     // check command line arguments number
