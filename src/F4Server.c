@@ -36,9 +36,12 @@ void clear_terminal() {
 void sigIntHandler(int sig) {
     if (++catcher == 2) {
         // TODO: chiusura semafori
+
         // terminate connected clients
-        kill(game_data->client1_pid,SIGTERM);
-        kill(game_data->client2_pid,SIGTERM);
+        if(game_data->client1_pid != -1 && game_data->client2_pid != -1){
+            kill(game_data->client1_pid,SIGTERM);
+            kill(game_data->client2_pid,SIGTERM);
+        }
 
         free_shared_memory(game_data);
         remove_shared_memory(shmid_data);
