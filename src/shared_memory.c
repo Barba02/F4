@@ -4,7 +4,6 @@
 #include "errExit.h"
 #include "shared_memory.h"
 
-// TODO: sistemare senza IPC_EXCL sennò il client non può collegarsi
 int alloc_shared_memory(size_t size, key_t key, int ipc_excl) {
     int shmid = shmget(key, size, S_IRUSR | S_IWUSR | IPC_CREAT | ((ipc_excl == 1) ? IPC_EXCL : 0));
     if (shmid == -1)
@@ -28,4 +27,13 @@ void remove_shared_memory(int shmid) {
     // delete the shared memory segment
     if (shmctl(shmid, IPC_RMID, NULL) == -1)
         errExit("Cannot delete shared memory segment");
+}
+
+int shm_already_existent(size_t size, key_t key) {
+    int shmid = shmget(key, size, S_IRUSR | S_IWUSR | IPC_CREAT | IPC_EXCL);
+    if (shmid != -1) {
+        remove_shared_memory(shmid);
+        return 0;
+    }
+    return 1;
 }

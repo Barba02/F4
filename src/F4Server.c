@@ -136,14 +136,9 @@ int main (int argc, char *argv[]) {
     if (signal(SIGUSR2, sigUsr2Handler) == SIG_ERR)
         errExit("Cannot change signal handler");
 
-    // initialize share memory access semaphores
-    unsigned short sem_init[] = {0, 0};
-    int shm_access_semid = create_sem_set(SHM_ACCESS, 2, sem_init);
-
     // initialize shared memory for game data
     shmid_data = alloc_shared_memory(sizeof(game_t), GAME_KEY, 1);
     game_data = (game_t*) get_shared_memory(shmid_data);
-    semOp(shm_access_semid, 0, 1);
 
     // check command line arguments number
 	if (argc < 3 || argc > 5) {
@@ -182,7 +177,6 @@ int main (int argc, char *argv[]) {
     int (*game_matrix)[game_data->cols]; // TODO: deve essere globale
     shmid_matrix = alloc_shared_memory(sizeof(int[game_data->rows][game_data->cols]), MATRIX_KEY, 1);
     game_matrix = get_shared_memory(shmid_matrix);
-    semOp(shm_access_semid, 1, 1);
 
     // continue until matrix are full or one player win
     while (game_data->n_played<game_data->rows*game_data->cols && !check_win(game_data->rows, game_data->cols, game_matrix));

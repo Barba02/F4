@@ -29,4 +29,6 @@ void free_shared_memory(void *ptr_sh);
 
 void remove_shared_memory(int shmid);
 
+int shm_already_existent(size_t size, key_t key);
+
 #endif

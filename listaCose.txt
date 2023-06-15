@@ -10,3 +10,5 @@
 -controllo della vittoria/pareggio essere fatto sul server
 -quando termina il server terminano anche il client (manca ancora la distinzione tra terminazione esterna o vittoria/pareggio)
 -aggiunto controllo se pid dei client sono stati settati allora faccio kill altrimenti no, senò crasha
+-chiusura memorie/semafori se client si chiude improvvisamente (on_exit)
+-il client controlla che esista la memoria condivisa altrimenti la crea e non la elimina
