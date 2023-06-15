@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <sys/msg.h>
 #include <termios.h>
+#include <sys/sem.h>
 #include <sys/stat.h>
 #include "game.h"
 #include "errExit.h"
@@ -57,11 +58,18 @@ int main (int argc, char *argv[]) {
         game_data->autoplay = (argc == 3 && strcmp(argv[2], "1") == 0) ? 1 : 0;
     }
 
+    // get shared memory acccess semaphores
+    /*int shm_access_semid = semget(SHM_ACCESS, 2, S_IRUSR | S_IWUSR);
+    if (shm_access_semid == -1)
+        errExit("Cannot get semaphores"); */
+
     // attach to game data
+    // semOp(shm_access_semid, 0, -1);
     shmid_data = alloc_shared_memory(sizeof(game_t), GAME_KEY, 0);
     game_data = (game_t*) get_shared_memory(shmid_data);
 
     // attach to game matrix
+    // semOp(shm_access_semid, 1, -1);
     shmid_matrix = alloc_shared_memory(sizeof(int[game_data->rows][game_data->cols]),MATRIX_KEY, 0);
     game_matrix = get_shared_memory(shmid_matrix);
 
