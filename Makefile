@@ -1,7 +1,7 @@
 CFLAGS=-Wall -std=gnu99
 INCLUDES=-I./inc
 
-LIBS=src/errExit.c src/shared_memory.c src/game.c
+LIBS=src/errExit.c src/shared_memory.c src/game.c src/semaphores.c
 SERVER_SRCS=$(LIBS) src/F4Server.c
 CLIENT_SRCS=$(LIBS) src/F4Client.c
 SERVER_OBJS=$(SERVER_SRCS:.c=.o)
