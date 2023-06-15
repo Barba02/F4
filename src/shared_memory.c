@@ -37,3 +37,9 @@ int shm_already_existent(size_t size, key_t key) {
     }
     return 1;
 }
+
+void *retrieve_shm_segment(size_t size, key_t key) {
+    if (!shm_already_existent(size, key))
+        return NULL;
+    return get_shared_memory(alloc_shared_memory(size, key, 0));
+}

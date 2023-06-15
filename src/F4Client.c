@@ -16,10 +16,16 @@
 #include "semaphores.h"
 #include "shared_memory.h"
 
-int shmid_data; // shared segment's id for game data
 game_t* game_data; // shared struct containing game data
-int shmid_matrix; // shared segment's id for game matrix
 int (*game_matrix)[]; // shared matrix to play
+
+// functions to deattach shared memory segments on exit
+void deattach_shmid_data() {
+    free_shared_memory(game_data);
+}
+void deattach_shmid_matrix() {
+    free_shared_memory(game_matrix);
+}
 
 // catches SIGUSR1
 void sigUsr1Handler(int sig) {
@@ -48,12 +54,11 @@ int main (int argc, char *argv[]) {
         errExit("Cannot change signal handler");
 
     // attach to game data
-    if (!shm_already_existent(sizeof(game_t), GAME_KEY)) {
+    if ((game_data = (game_t*) retrieve_shm_segment(sizeof(game_t), GAME_KEY)) == NULL) {
         printf("Server not running\n");
         exit(1);
     }
-    shmid_data = alloc_shared_memory(sizeof(game_t), GAME_KEY, 0);
-    game_data = (game_t*) get_shared_memory(shmid_data);
+    atexit(deattach_shmid_data);
 
     // check command line arguments number
     if (argc < 2 || argc > 3) {
@@ -62,18 +67,17 @@ int main (int argc, char *argv[]) {
     }
     // validation of the arguments
     else {
-        //Se è gia stato settato a 1 sono il bot e non faccio niente, altrimenti lo setto
-        if(!game_data->autoplay)
+        // check if the bot is playing or it has to be setted
+        if (!game_data->autoplay)
             game_data->autoplay = (argc == 3 && strcmp(argv[2], "1") == 0) ? 1 : 0;
     }
 
     // attach to game matrix
-    if (!shm_already_existent(sizeof(int[game_data->rows][game_data->cols]),MATRIX_KEY)) {
+    if ((game_matrix = retrieve_shm_segment(sizeof(int[game_data->rows][game_data->cols]), MATRIX_KEY)) == NULL) {
         printf("Server not running\n");
         exit(1);
     }
-    shmid_matrix = alloc_shared_memory(sizeof(int[game_data->rows][game_data->cols]),MATRIX_KEY, 0);
-    game_matrix = get_shared_memory(shmid_matrix);
+    atexit(deattach_shmid_matrix);
 
     // check if this client is user 1 or 2
     if (game_data->client1_pid == -1) {

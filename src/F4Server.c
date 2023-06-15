@@ -18,7 +18,7 @@ int catcher = 0; // counter to kill the process
 int shmid_data; // shared segment's id for game data
 game_t* game_data; // shared struct containing game data
 int shmid_matrix; // shared segment's id for game matrix
-// int (*game_matrix)[]; // shared matrix to play
+int (*game_matrix)[]; // shared matrix to play
 
 // setting terminal behaviour to not print ^C and restore at the end
 struct termios save;
@@ -33,22 +33,25 @@ void clear_terminal() {
     atexit(reset_terminal);
 }
 
+// functions to close shared memory segments on exit
+void close_shmid_data() {
+    free_shared_memory(game_data);
+    remove_shared_memory(shmid_data);
+}
+void close_shmid_matrix() {
+    free_shared_memory(game_matrix);
+    remove_shared_memory(shmid_matrix);
+}
+
 // catches SIGINT and manage closing
 void sigIntHandler(int sig) {
     if (++catcher == 2) {
-        // TODO: chiusura semafori
-
         // terminate connected clients
         if(game_data->client1_pid != -1 && game_data->client2_pid != -1){
             kill(game_data->client1_pid,SIGTERM);
             kill(game_data->client2_pid,SIGTERM);
         }
-
-        free_shared_memory(game_data);
-        remove_shared_memory(shmid_data);
-        // free_shared_memory(game_matrix);
-        remove_shared_memory(shmid_matrix);
-        exit(0);
+        exit(0); // TODO: chiusura semafori
     }
     printf("Press CTRL+C another time to quit\n");
 }
@@ -139,6 +142,7 @@ int main (int argc, char *argv[]) {
     // initialize shared memory for game data
     shmid_data = alloc_shared_memory(sizeof(game_t), GAME_KEY, 1);
     game_data = (game_t*) get_shared_memory(shmid_data);
+    atexit(close_shmid_data);
 
     // check command line arguments number
 	if (argc < 3 || argc > 5) {
@@ -174,9 +178,9 @@ int main (int argc, char *argv[]) {
     game_data->client2_pid = -1;
 
     // initialize shared memory for game matrix
-    int (*game_matrix)[game_data->cols]; // TODO: deve essere globale
     shmid_matrix = alloc_shared_memory(sizeof(int[game_data->rows][game_data->cols]), MATRIX_KEY, 1);
     game_matrix = get_shared_memory(shmid_matrix);
+    atexit(close_shmid_matrix);
 
     // continue until matrix are full or one player win
     while (game_data->n_played<game_data->rows*game_data->cols && !check_win(game_data->rows, game_data->cols, game_matrix));
@@ -184,12 +188,6 @@ int main (int argc, char *argv[]) {
     // terminate connected clients
     kill(game_data->client1_pid,SIGTERM);
     kill(game_data->client2_pid,SIGTERM);
-
-    // TODO: chiusura semafori
-    free_shared_memory(game_data);
-    remove_shared_memory(shmid_data);
-    // free_shared_memory(game_matrix);
-    remove_shared_memory(shmid_matrix);
 
     return 0;
 }
