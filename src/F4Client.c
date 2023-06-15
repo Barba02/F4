@@ -1,15 +1,18 @@
-#include <time.h>
-#include <stdio.h>
+#include <fcntl.h>
+#include <ctype.h>
 #include <errno.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
 #include <sys/msg.h>
+#include <termios.h>
 #include <sys/stat.h>
-#include "shared_memory.h"
-#include "errExit.h"
 #include "game.h"
+#include "errExit.h"
+#include "semaphores.h"
+#include "shared_memory.h"
 
 int shmid_data; // shared segment's id for game data
 game_t* game_data; // shared struct containing game data

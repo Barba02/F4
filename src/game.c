@@ -31,7 +31,6 @@ void F4_game(game_t *game_data, int matrix_game[game_data->rows][game_data->cols
     while (1) {
         // print matrix game
         print_game(game_data->rows, game_data->cols, matrix_game, game_data->client1_sign, game_data->client2_sign);
-<<<<<<< Updated upstream
         player = (getpid() == game_data->client1_pid) ? 1 : 2;
         // column choice
         do {
@@ -41,7 +40,6 @@ void F4_game(game_t *game_data, int matrix_game[game_data->rows][game_data->cols
             scanf("%d", &choice);
             error = (choice < 1 || choice > game_data->cols || play(game_data, matrix_game, choice, player) == -1);
         } while (error);
-=======
         // choice of column
         if(game_data->autoplay == 1 && getpid() == game_data->client2_pid)
         {
@@ -74,7 +72,6 @@ void F4_game(game_t *game_data, int matrix_game[game_data->rows][game_data->cols
                 scanf("%i",&choice);
                 }
             }
->>>>>>> Stashed changes
     }
 }
 

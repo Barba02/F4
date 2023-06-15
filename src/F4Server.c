@@ -9,9 +9,10 @@
 #include <sys/msg.h>
 #include <termios.h>
 #include <sys/stat.h>
-#include "errExit.h"
-#include "shared_memory.h"
 #include "game.h"
+#include "errExit.h"
+#include "semaphores.h"
+#include "shared_memory.h"
 
 int catcher = 0; // counter to kill the process
 int shmid_data; // shared segment's id for game data
@@ -143,6 +144,8 @@ int main (int argc, char *argv[]) {
         errExit("Cannot change signal handler");
 
     //TODO: inizializzare semafori
+    unsigned short sem_init[] = {0, 0};
+    int shm_access_semid = create_sem_set(SHM_ACCESS, 2, sem_init);
 
     // initialize shared memory for game data
     shmid_data = alloc_shared_memory(sizeof(game_t), GAME_KEY, 1);
