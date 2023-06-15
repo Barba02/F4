@@ -55,11 +55,11 @@ int main (int argc, char *argv[]) {
     }
 
     // attach to game data
-    shmid_data = alloc_shared_memory(sizeof(game_t), GAME_KEY);
+    shmid_data = alloc_shared_memory(sizeof(game_t), GAME_KEY, 0);
     game_data = (game_t*) get_shared_memory(shmid_data);
 
     // attach to game matrix
-    shmid_matrix = alloc_shared_memory(sizeof(int[game_data->rows][game_data->cols]),MATRIX_KEY);
+    shmid_matrix = alloc_shared_memory(sizeof(int[game_data->rows][game_data->cols]),MATRIX_KEY, 0);
     game_matrix = get_shared_memory(shmid_matrix);
 
     // check if this client is user 1 or 2

@@ -145,7 +145,7 @@ int main (int argc, char *argv[]) {
     //TODO: inizializzare semafori
 
     // initialize shared memory for game data
-    shmid_data = alloc_shared_memory(sizeof(game_t), GAME_KEY);
+    shmid_data = alloc_shared_memory(sizeof(game_t), GAME_KEY, 1);
     game_data = (game_t*) get_shared_memory(shmid_data);
 
     // check command line arguments number
@@ -181,7 +181,7 @@ int main (int argc, char *argv[]) {
 
     // initialize shared memory for game matrix
     int (*game_matrix)[game_data->cols]; // TODO: deve essere globale
-    shmid_matrix = alloc_shared_memory(sizeof(int[game_data->rows][game_data->cols]),MATRIX_KEY);
+    shmid_matrix = alloc_shared_memory(sizeof(int[game_data->rows][game_data->cols]), MATRIX_KEY, 1);
     game_matrix = get_shared_memory(shmid_matrix);
 
     // continue until matrix are full or one player win

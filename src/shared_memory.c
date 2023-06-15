@@ -5,8 +5,8 @@
 #include "shared_memory.h"
 
 // TODO: sistemare senza IPC_EXCL sennò il client non può collegarsi
-int alloc_shared_memory(size_t size, key_t key) {
-    int shmid = shmget(key, size, IPC_CREAT | S_IRWXU);
+int alloc_shared_memory(size_t size, key_t key, int ipc_excl) {
+    int shmid = shmget(key, size, S_IRUSR | S_IWUSR | IPC_CREAT | ((ipc_excl == 1) ? IPC_EXCL : 0));
     if (shmid == -1)
         errExit("Cannot allocate shared memory segment");
     return shmid;
