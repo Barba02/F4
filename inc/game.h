@@ -14,6 +14,6 @@ int play(game_t *game_data, int matrix_game[game_data->rows][game_data->cols], i
  * return 1: win
  * return 0: not win
  */
-int check_win(game_t *game_data, int matrix_game[game_data->rows][game_data->cols]);
+int check_win(int rows, int cols, int matrix_game[rows][cols]);
 
 #endif

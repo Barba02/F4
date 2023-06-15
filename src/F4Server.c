@@ -166,7 +166,7 @@ int main (int argc, char *argv[]) {
     game_matrix = get_shared_memory(shmid_matrix);
 
     // continue until matrix are full or one player win
-    while (game_data->n_played<game_data->rows*game_data->cols && !check_win(game_data,game_matrix));
+    while (game_data->n_played<game_data->rows*game_data->cols && !check_win(game_data->rows, game_data->cols, game_matrix));
 
     // terminate connected clients
     kill(game_data->client1_pid,SIGTERM);
