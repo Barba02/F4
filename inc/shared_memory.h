@@ -21,7 +21,7 @@ typedef struct game {
     int n_played;
 } game_t;
 
-int alloc_shared_memory(size_t size, key_t key);
+int alloc_shared_memory(size_t size, key_t key, int ipc_excl);
 
 void *get_shared_memory(int shmid);
 
