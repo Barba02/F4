@@ -34,7 +34,7 @@ void sigTermHandler(int sig) {
 }
 
 int main (int argc, char *argv[]) {
-    int autoplay;
+    
 
     // setting SIGUSR1 handling
     if (signal(SIGUSR1, sigUsr1Handler) == SIG_ERR)
@@ -51,7 +51,7 @@ int main (int argc, char *argv[]) {
     }
     // validation of the arguments
     else {
-        autoplay = (argc == 3 && strcmp(argv[2], "1") == 0) ? 1 : 0;
+        game_data->autoplay = (argc == 3 && strcmp(argv[2], "1") == 0) ? 1 : 0;
     }
 
     // attach to game data
@@ -81,12 +81,15 @@ int main (int argc, char *argv[]) {
     }
     else
         kill(game_data->server_pid,SIGUSR2);
+    
+    while(1)
+    {
+        print_game(game_data->rows,game_data->cols,game_matrix,game_data->client1_sign,game_data->client2_sign);
 
-    while (1);
-
-    if (autoplay) {
-        //TODO: gioco automatico con un bot
+        F4_game(game_data,game_matrix);
     }
+        //TODO: gioco automatico con un bot
+    
     
     return 0;
 }

@@ -55,6 +55,25 @@ void sigIntHandler(int sig) {
 // catches SIGUSR1
 void sigUsr1Handler(int sig) {
     printf("%s (%c) is ready to play\n", game_data->client1_username, game_data->client1_sign);
+    if(game_data->autoplay)
+    {
+        pid_t autoPid = fork();
+        if(autoPid == -1)
+        {
+            printf("Fork error.\n ");
+            exit;
+
+        }
+        else if(autoPid == 0)
+        {
+            printf("Fork succeded. \n");
+
+            execl("/home/islam/Desktop/F4/src/F4Client.c", "F4Client.c",NULL);
+
+            printf("Errore nell'esecuzione del programma del giocatore automatico\n");
+            exit;
+        }
+    }
 }
 
 // catches SIGUSR2

@@ -13,6 +13,7 @@ typedef struct game {
     int last_player;
     int rows;
     int cols;
+    int autoplay;
     char client1_sign;
     char client2_sign;
     char client1_username[25];
