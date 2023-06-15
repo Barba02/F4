@@ -34,8 +34,6 @@ void sigTermHandler(int sig) {
 }
 
 int main (int argc, char *argv[]) {
-    
-
     // setting SIGUSR1 handling
     if (signal(SIGUSR1, sigUsr1Handler) == SIG_ERR)
         errExit("Cannot change signal handler");
@@ -44,6 +42,10 @@ int main (int argc, char *argv[]) {
     if (signal(SIGTERM, sigTermHandler) == SIG_ERR)
         errExit("Cannot change signal handler");
 
+    // attach to game data
+    shmid_data = alloc_shared_memory(sizeof(game_t), GAME_KEY, 0);
+    game_data = (game_t*) get_shared_memory(shmid_data);
+
     // check command line arguments number
     if (argc < 2 || argc > 3) {
         printf("Usage: %s <username> [autoPlay]\n", argv[0]);
@@ -51,12 +53,10 @@ int main (int argc, char *argv[]) {
     }
     // validation of the arguments
     else {
-        game_data->autoplay = (argc == 3 && strcmp(argv[2], "1") == 0) ? 1 : 0;
+        //Se è gia stato settato a 1 sono il bot e non faccio niente, altrimenti lo setto
+        if(!game_data->autoplay)
+            game_data->autoplay = (argc == 3 && strcmp(argv[2], "1") == 0) ? 1 : 0;
     }
-
-    // attach to game data
-    shmid_data = alloc_shared_memory(sizeof(game_t), GAME_KEY, 0);
-    game_data = (game_t*) get_shared_memory(shmid_data);
 
     // attach to game matrix
     shmid_matrix = alloc_shared_memory(sizeof(int[game_data->rows][game_data->cols]),MATRIX_KEY, 0);
@@ -82,14 +82,7 @@ int main (int argc, char *argv[]) {
     else
         kill(game_data->server_pid,SIGUSR2);
     
-    while(1)
-    {
-        print_game(game_data->rows,game_data->cols,game_matrix,game_data->client1_sign,game_data->client2_sign);
+    while(1);
 
-        F4_game(game_data,game_matrix);
-    }
-        //TODO: gioco automatico con un bot
-    
-    
     return 0;
 }
