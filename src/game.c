@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <time.h>
 #include "game.h"
 
 //print game matrix
@@ -27,51 +28,31 @@ void print_game(int rows, int cols, int mat[rows][cols], char p1_sign, char p2_s
 }
 
 void F4_game(game_t *game_data, int matrix_game[game_data->rows][game_data->cols]) {
+    srand(time(NULL));
     int choice, player, error = 0;
     while (1) {
         // print matrix game
         print_game(game_data->rows, game_data->cols, matrix_game, game_data->client1_sign, game_data->client2_sign);
         player = (getpid() == game_data->client1_pid) ? 1 : 2;
-        // column choice
-        do {
-            if (error)
-                printf("Choosen column must be in the game range and not full\n");
-            printf("Insert column number: ");
-            scanf("%d", &choice);
-            error = (choice < 1 || choice > game_data->cols || play(game_data, matrix_game, choice, player) == -1);
-        } while (error);
-        // choice of column
-        if(game_data->autoplay == 1 && getpid() == game_data->client2_pid)
-        {
-            choice = rand() % game_data->cols;
+        // column choice by bot
+        if(game_data->autoplay && getpid() == game_data->client2_pid){
+            do {
+                if (error)
+                    printf("Choosen column must be in the game range and not full\n");
+                choice = (rand() % game_data->cols) + 1;
+                error = (choice < 1 || choice > game_data->cols || play(game_data, matrix_game, choice, player) == -1);
+            } while (error);
         }
-        else
-        {
-        do{
-            printf("Insert col [1,%i]: ",game_data->cols);
-            scanf("%i",&choice);
+        // column choice by human client
+        else{
+            do {
+                if (error)
+                    printf("Choosen column must be in the game range and not full\n");
+                printf("Insert column number: ");
+                scanf("%d", &choice);
+                error = (choice < 1 || choice > game_data->cols || play(game_data, matrix_game, choice, player) == -1);
+            } while (error);
         }
-        while(choice<1 || choice>game_data->cols);
-        }
-        // get the play (player1 or player2)
-        if(getpid() == game_data->client1_pid)
-            while(play(game_data,matrix_game,choice,1) == -1){
-                printf("The column selected is full, try again.\n");
-                printf("Insert col [1,%i]: ",game_data->cols);
-                scanf("%i",&choice);
-            }
-        else
-            while(play(game_data,matrix_game,choice,2) == -1){
-                printf("The column selected is full, try again.\n");
-                if(game_data->autoplay)
-                {
-                    choice = rand() % game_data->cols;
-                }
-                else {
-                printf("Insert col [1,%i]: ",game_data->cols);
-                scanf("%i",&choice);
-                }
-            }
     }
 }
 
