@@ -28,6 +28,8 @@ void deattach_shmid_matrix() {
     free_shared_memory(game_matrix);
 }
 
+//TODO: abbandono client
+
 // catches SIGUSR1
 void sigUsr1Handler(int sig) {
     printf("Other player found\n");
@@ -37,6 +39,7 @@ void sigUsr1Handler(int sig) {
 
 // catches SIGTERM
 void sigTermHandler(int sig) {
+    //TODO: controllo del caso limite (matrice piena,vittoria con l'ultima pedina)
     printf("\nGAME OVER : ");
     if(game_data->n_played == game_data->rows*game_data->cols)
         printf("DRAW\n");

@@ -194,6 +194,7 @@ int main (int argc, char *argv[]) {
     atexit(close_shmid_matrix);
 
     // continue until matrix are full or one player win
+    //TODO: arbitraggio con semafori
     while (game_data->n_played<game_data->rows*game_data->cols && !check_win(game_data->rows, game_data->cols, game_matrix));
 
     // terminate connected clients
