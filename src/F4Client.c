@@ -18,6 +18,7 @@
 
 game_t* game_data; // shared struct containing game data
 int (*game_matrix)[]; // shared matrix to play
+int semid; // semaphore set to garantee mutex and playing alternance
 
 // functions to deattach shared memory segments on exit
 void deattach_shmid_data() {
@@ -31,7 +32,7 @@ void deattach_shmid_matrix() {
 void sigUsr1Handler(int sig) {
     printf("Other player found\n");
     // start game
-    F4_game(game_data, game_matrix);
+    F4_game(game_data, game_matrix ,semid);
 }
 
 // catches SIGTERM
@@ -79,6 +80,10 @@ int main (int argc, char *argv[]) {
     }
     atexit(deattach_shmid_matrix);
 
+    // get semaphore set
+    if((semid = semget(SEM_KEY,2,S_IRUSR | S_IWUSR))== -1)
+        errExit("Cannot get semaphores");
+
     // check if this client is user 1 or 2
     if (game_data->client1_pid == -1) {
         game_data->client1_pid = getpid();
@@ -96,8 +101,11 @@ int main (int argc, char *argv[]) {
         printf("Waiting for another player...\n");
         fflush(stdin);
     }
-    else
+    else{
         kill(game_data->server_pid,SIGUSR2);
+        F4_game(game_data, game_matrix,semid);
+    }
+
     
     while(1);
 

@@ -19,6 +19,7 @@ int shmid_data; // shared segment's id for game data
 game_t* game_data; // shared struct containing game data
 int shmid_matrix; // shared segment's id for game matrix
 int (*game_matrix)[]; // shared matrix to play
+int semid; // semaphore set to garantee mutex and playing alternance
 
 // setting terminal behaviour to not print ^C and restore at the end
 struct termios save;
@@ -41,6 +42,10 @@ void close_shmid_data() {
 void close_shmid_matrix() {
     free_shared_memory(game_matrix);
     remove_shared_memory(shmid_matrix);
+}
+// functions to close semaphore set on exit
+void close_semid() {
+    remove_sem_set(semid);
 }
 
 // catches SIGINT and manage closing
@@ -176,6 +181,11 @@ int main (int argc, char *argv[]) {
     game_data->server_pid = getpid();
     game_data->client1_pid = -1;
     game_data->client2_pid = -1;
+
+    // initialize semaphore set
+    unsigned short sem_init_values[]={1,0};   // [0]:player1 turn [1]:player2 turn [2]:mutex
+    semid = create_sem_set(SEM_KEY,2,sem_init_values);
+    atexit(close_semid);
 
     // initialize shared memory for game matrix
     shmid_matrix = alloc_shared_memory(sizeof(int[game_data->rows][game_data->cols]), MATRIX_KEY, 1);

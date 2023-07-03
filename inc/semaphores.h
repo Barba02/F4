@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 
-#define SHM_ACCESS 10928
+#define SEM_KEY 10928
 
 union semun {
     int val;

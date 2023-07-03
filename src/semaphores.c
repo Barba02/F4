@@ -11,7 +11,7 @@ void semOp (int semid, unsigned short sem_num, short sem_op) {
 }
 
 int create_sem_set(key_t semkey, int nsems, unsigned short *values) {
-    int semid = semget(semkey, nsems, IPC_CREAT | S_IRUSR | S_IWUSR);
+    int semid = semget(semkey, nsems, IPC_CREAT | S_IRUSR | S_IWUSR | IPC_EXCL);
     if (semid == -1)
         errExit("semget failed");
     union semun arg;

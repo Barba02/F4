@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <time.h>
 #include "game.h"
+#include "semaphores.h"
 
 //print game matrix
 void print_game(int rows, int cols, int mat[rows][cols], char p1_sign, char p2_sign) {
@@ -27,13 +28,16 @@ void print_game(int rows, int cols, int mat[rows][cols], char p1_sign, char p2_s
     printf("-\n");
 }
 
-void F4_game(game_t *game_data, int matrix_game[game_data->rows][game_data->cols]) {
+void F4_game(game_t *game_data, int matrix_game[game_data->rows][game_data->cols],int semid) {
+    printf("Start game\n");
     srand(time(NULL));
     int choice, player, error = 0;
     while (1) {
+        player = (getpid() == game_data->client1_pid) ? 1 : 2;
+        //
+        semOp(semid,player-1,-1);
         // print matrix game
         print_game(game_data->rows, game_data->cols, matrix_game, game_data->client1_sign, game_data->client2_sign);
-        player = (getpid() == game_data->client1_pid) ? 1 : 2;
         // column choice by bot
         if(game_data->autoplay && getpid() == game_data->client2_pid){
             do {
@@ -53,6 +57,7 @@ void F4_game(game_t *game_data, int matrix_game[game_data->rows][game_data->cols
                 error = (choice < 1 || choice > game_data->cols || play(game_data, matrix_game, choice, player) == -1);
             } while (error);
         }
+        semOp(semid,player%2,1);
     }
 }
 
