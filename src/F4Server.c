@@ -33,6 +33,7 @@ void clear_terminal() {
     tcsetattr(0, 0, &new);
     atexit(reset_terminal);
 }
+// TODO: vincita in caso di arresa di un client
 
 // functions to close shared memory segments on exit
 void close_shmid_data() {
