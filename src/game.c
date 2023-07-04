@@ -4,7 +4,7 @@
 #include "game.h"
 #include "semaphores.h"
 
-//print game matrix
+// print game matrix
 void print_game(int rows, int cols, int mat[rows][cols], char p1_sign, char p2_sign) {
     // print cols numeration
     printf("\n");
@@ -111,7 +111,7 @@ int check_win(int rows, int cols, int matrix_game[rows][cols]) {
                 return 1;
         }
     }
-    // check diagonal rigth to left
+    // check diagonal right to left
     for (int row = 3; row < rows; row++) {
         for (int col = 0; col < cols - 3; col++) {
             if (matrix_game[row][col] != 0 &&
@@ -121,6 +121,6 @@ int check_win(int rows, int cols, int matrix_game[rows][cols]) {
                 return 1;
         }
     }
-    // nobody win
+    // nobody wins
     return 0;
 }
