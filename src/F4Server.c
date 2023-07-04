@@ -177,8 +177,8 @@ int main (int argc, char *argv[]) {
     game_data->client2_pid = -1;
 
     // initialize semaphore set
-    unsigned short sem_init_values[]={1, 0};   // [0]:player1 turn [1]:player2 turn [2]:mutex
-    semid = create_sem_set(SEM_KEY, 2, sem_init_values);
+    unsigned short sem_init_values[]={0,1,0};   // [0]:server [1]:player1 turn [2]:player2 turn
+    semid = create_sem_set(SEM_KEY,3,sem_init_values);
     atexit(close_semid);
 
     // initialize game matrix shared memory
@@ -186,13 +186,26 @@ int main (int argc, char *argv[]) {
     game_matrix = get_shared_memory(shmid_matrix);
     atexit(close_shmid_matrix);
 
-    // continue until matrix are full or one player win
-    //TODO: arbitraggio con semafori
-    while (game_data->n_played<game_data->rows*game_data->cols && !check_win(game_data->rows, game_data->cols, game_matrix));
+    // waiting SIGUSR1
+    pause();
+    // waiting SIGUSR2
+    pause();
 
-    // terminate connected clients
-    kill(game_data->client1_pid, SIGTERM);
-    kill(game_data->client2_pid, SIGTERM);
+    while(1){
+        semOp(semid,0,-1);
+        // check win or full matrix
+        if (game_data->n_played==game_data->rows*game_data->cols || check_win(game_data->rows, game_data->cols, game_matrix)){
+            // terminate connected clients
+            kill(game_data->client1_pid,SIGTERM);
+            kill(game_data->client2_pid,SIGTERM);
+            break;
+        }else{
+            if(game_data->last_player == 1)
+                semOp(semid,2,1);
+            else
+                semOp(semid,1,1);
+        }
+    }
 
     return 0;
 }

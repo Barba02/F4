@@ -31,12 +31,12 @@ void sigUsr1Handler(int sig) {
 // catches SIGTERM
 void sigTermHandler(int sig) {
     // TODO: abbandono client
-    // TODO: controllo del caso limite (matrice piena, vittoria con l'ultima pedina)
+    //Controllo il motivo della terminazione (Vittoria/Pareggio)
     printf("\nGAME OVER : ");
-    if (game_data->n_played == game_data->rows*game_data->cols)
-        printf("DRAW\n");
-    else
+    if (check_win(game_data->rows, game_data->cols, game_matrix))
         printf("%s WIN!\n", (game_data->last_player == 1)? game_data->client1_username : game_data->client2_username);
+    else
+        printf("DRAW\n");
     exit(0);
 }
 
@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
     atexit(deattach_shmid_matrix);
 
     // get semaphore set
-    if((semid = semget(SEM_KEY, 2, S_IRUSR | S_IWUSR))== -1)
+    if((semid = semget(SEM_KEY,3,S_IRUSR | S_IWUSR))== -1)
         errExit("Cannot get semaphores");
 
     // check if this client is user 1 or 2
