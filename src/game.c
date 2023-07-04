@@ -28,13 +28,13 @@ void print_game(int rows, int cols, int mat[rows][cols], char p1_sign, char p2_s
     printf("-\n");
 }
 
-void F4_game(game_t *game_data, int matrix_game[game_data->rows][game_data->cols], int semid) {
+_Noreturn void F4_game(game_t *game_data, int matrix_game[game_data->rows][game_data->cols], int semid) {
     srand(time(NULL));
     int choice, player, error = 0;
     while (1) {
         player = (getpid() == game_data->client1_pid) ? 1 : 2;
         // player getting his turn on shared memory
-        semOp(semid,player-1,-1);
+        semOp(semid, player-1, -1);
         // print current situation of the matrix
         print_game(game_data->rows, game_data->cols, matrix_game, game_data->client1_sign, game_data->client2_sign);
         // column choice by bot
@@ -58,9 +58,9 @@ void F4_game(game_t *game_data, int matrix_game[game_data->rows][game_data->cols
         }
         // print matrix after the turn
         print_game(game_data->rows, game_data->cols, matrix_game, game_data->client1_sign, game_data->client2_sign);
-        printf("Waiting for other player to play...\n");
+        printf("Waiting for %s to play...\n", (player == 1) ? game_data->client2_username : game_data->client1_username);
         // player freeing shared memory
-        semOp(semid,player%2,1);
+        semOp(semid, player%2, 1);
     }
 }
 

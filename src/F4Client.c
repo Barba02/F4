@@ -24,7 +24,7 @@ void deattach_shmid_matrix() {
 
 // catches SIGUSR1 (start game after other player arrived)
 void sigUsr1Handler(int sig) {
-    printf("Other player found\n");
+    printf("You are playing against %s\n", game_data->client2_username);
     F4_game(game_data, game_matrix, semid);
 }
 
@@ -89,14 +89,15 @@ int main(int argc, char *argv[]) {
         strcpy(game_data->client2_username, argv[1]);
     }
 
-    // notify server
+    // first client notify server and wait for the second
     if (getpid() == game_data->client1_pid) {
         kill(game_data->server_pid, SIGUSR1);
-        // first player waiting for second player
         printf("Waiting for another player...\n");
-        fflush(stdin);
+        pause();
     }
+    // second client notify server and wait game start
     else {
+        printf("Waiting for %s to start the game...\n", game_data->client1_username);
         kill(game_data->server_pid, SIGUSR2);
         F4_game(game_data, game_matrix, semid);
     }
