@@ -1,5 +1,6 @@
 #include <sys/sem.h>
 #include <sys/stat.h>
+#include <errno.h>
 
 #include "errExit.h"
 #include "semaphores.h"
@@ -7,7 +8,8 @@
 void semOp (int semid, unsigned short sem_num, short sem_op) {
     struct sembuf sop = {sem_num, sem_op, 0};
     if (semop(semid, &sop, 1) == -1)
-        errExit("semop failed");
+        if(errno != EINTR)
+            errExit("semop failed");
 }
 
 int create_sem_set(key_t semkey, int nsems, unsigned short *values) {

@@ -44,15 +44,21 @@ void close_semid() {
     remove_sem_set(semid);
 }
 
+// catches SIGTERM and manage closing
+void sigTermHandler(int sig) {
+    printf("Client quit\n");
+    exit(0);
+}
+
 // catches SIGINT and manage closing
 void sigIntHandler(int sig) {
     if (++catcher == 2) {
         // terminate connected clients
-        if (game_data->client1_pid != -1 && game_data->client2_pid != -1) {
-            game_data->server_terminate = 1;
+        game_data->server_terminate = 1;
+        if (game_data->client1_pid != -1)
             kill(game_data->client1_pid, SIGTERM);
+        if (game_data->client2_pid != -1)
             kill(game_data->client2_pid, SIGTERM);
-        }
         exit(0);
     }
     printf("Press CTRL+C another time to quit\n");
@@ -135,6 +141,9 @@ int main (int argc, char *argv[]) {
     clear_terminal();
     if (signal(SIGINT, sigIntHandler) == SIG_ERR)
         errExit("Cannot change signal handler");
+    // setting SIGTERM handling
+    if (signal(SIGTERM, sigTermHandler) == SIG_ERR)
+        errExit("Cannot change signal handler");
     // setting SIGUSR1 handling
     if (signal(SIGUSR1, sigUsr1Handler) == SIG_ERR)
         errExit("Cannot change signal handler");
@@ -181,8 +190,8 @@ int main (int argc, char *argv[]) {
     game_data->client2_pid = -1;
 
     // initialize semaphore set
-    unsigned short sem_init_values[]={1, 0};   // [0]:player1 turn [1]:player2 turn [2]:mutex
-    semid = create_sem_set(SEM_KEY, 2, sem_init_values);
+    unsigned short sem_init_values[]={0,1,0};   // [0]:server [1]:player1 turn [2]:player2 turn
+    semid = create_sem_set(SEM_KEY,3,sem_init_values);
     atexit(close_semid);
 
     // initialize game matrix shared memory
@@ -190,14 +199,28 @@ int main (int argc, char *argv[]) {
     game_matrix = get_shared_memory(shmid_matrix);
     atexit(close_shmid_matrix);
 
-    // continue until matrix are full or one player win
-    //TODO: arbitraggio con semafori
-    while (game_data->n_played<game_data->rows*game_data->cols && !check_win(game_data->rows, game_data->cols, game_matrix));
+    // waiting SIGUSR1
+    pause();
+    // waiting SIGUSR2
+    pause();
 
-    // terminate connected clients
-    game_data->server_terminate = 1;
-    kill(game_data->client1_pid, SIGTERM);
-    kill(game_data->client2_pid, SIGTERM);
+    while (1) {
+        semOp(semid,0,-1);
+        // check win or full matrix
+        if (game_data->n_played==game_data->rows*game_data->cols || check_win(game_data->rows, game_data->cols, game_matrix)){
+            // terminate connected clients
+            game_data->server_terminate = 1;
+            kill(game_data->client1_pid,SIGTERM);
+            kill(game_data->client2_pid,SIGTERM);
+            break;
+        }
+        else {
+            if (game_data->last_player == 1)
+                semOp(semid,2,1);
+            else
+                semOp(semid,1,1);
+        }
+    }
 
     return 0;
 }
