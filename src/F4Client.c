@@ -30,19 +30,43 @@ void sigUsr1Handler(int sig) {
 
 // catches SIGTERM
 void sigTermHandler(int sig) {
-    // TODO: abbandono client
-    // TODO: controllo del caso limite (matrice piena, vittoria con l'ultima pedina)
-    printf("\nGAME OVER : ");
-    if (game_data->n_played == game_data->rows*game_data->cols)
-        printf("DRAW\n");
-    else
-        printf("%s WIN!\n", (game_data->last_player == 1)? game_data->client1_username : game_data->client2_username);
+    if (game_data->server_terminate) {
+        printf("\nServer terminated the game\n");
+        if (game_data->n_played == game_data->rows*game_data->cols)
+            printf("DRAW\n");
+        else
+            printf("%s WIN!\n", (game_data->last_player == 1)? game_data->client1_username : game_data->client2_username);
+        // TODO: stampa risultato (caso limite)
+    }
+    else {
+        if (game_data->client1_pid == -1)
+            printf("\n%s quit, you won\n", game_data->client1_username);
+        else if (game_data->client2_pid == -1)
+            printf("\n%s quit, you won\n", game_data->client2_username);
+    }
+}
+
+void sigIntHandler(int sig) {
+    if (getpid() == game_data->client1_pid) {
+        game_data->client1_pid = -1;
+        kill(game_data->client2_pid, SIGTERM);
+    }
+    else {
+        game_data->client2_pid = -1;
+        kill(game_data->client1_pid, SIGTERM);
+    }
+    printf("\nYou quit and lose the game\n");
+    kill(game_data->server_pid, SIGTERM);
     exit(0);
+    // TODO: chiusura quando solo uno è connesso
 }
 
 int main(int argc, char *argv[]) {
+    // setting SIGINT handling
+    if (signal(SIGINT, sigIntHandler) == SIG_ERR)
+        errExit("Cannot change signal handler");
     // setting SIGTERM handling
-    if (signal(SIGTERM, sigTermHandler) == SIG_ERR)
+    if (signal(SIGINT, sigTermHandler) == SIG_ERR)
         errExit("Cannot change signal handler");
     // setting SIGUSR1 handling
     if (signal(SIGUSR1, sigUsr1Handler) == SIG_ERR)
@@ -76,7 +100,7 @@ int main(int argc, char *argv[]) {
     atexit(deattach_shmid_matrix);
 
     // get semaphore set
-    if((semid = semget(SEM_KEY, 2, S_IRUSR | S_IWUSR))== -1)
+    if ((semid = semget(SEM_KEY, 2, S_IRUSR | S_IWUSR))== -1)
         errExit("Cannot get semaphores");
 
     // check if this client is user 1 or 2

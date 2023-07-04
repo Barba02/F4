@@ -10,7 +10,6 @@ typedef struct game {
     pid_t server_pid;
     pid_t client1_pid;
     pid_t client2_pid;
-    int last_player;
     int rows;
     int cols;
     int autoplay;
@@ -19,6 +18,8 @@ typedef struct game {
     char client1_username[25];
     char client2_username[25];
     int n_played;
+    int server_terminate;
+    int last_player;
 } game_t;
 
 int alloc_shared_memory(size_t size, key_t key, int ipc_excl);

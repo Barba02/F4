@@ -48,10 +48,11 @@ void close_semid() {
 void sigIntHandler(int sig) {
     if (++catcher == 2) {
         // terminate connected clients
-        if (game_data->client1_pid != -1 && game_data->client2_pid != -1){
+        if (game_data->client1_pid != -1 && game_data->client2_pid != -1) {
+            game_data->server_terminate = 1;
             kill(game_data->client1_pid, SIGTERM);
             kill(game_data->client2_pid, SIGTERM);
-        } // TODO: avviso di terminazione sul client
+        }
         exit(0);
     }
     printf("Press CTRL+C another time to quit\n");
@@ -63,8 +64,10 @@ void sigUsr1Handler(int sig) {
     if (game_data->autoplay) {
         pid_t autoPid = fork();
         // close client if child process cannot be created
-        if (autoPid == -1)
-            kill(game_data->client1_pid, SIGTERM); //TODO: avviso
+        if (autoPid == -1) {
+            game_data->server_terminate = 1;
+            kill(game_data->client1_pid, SIGTERM);
+        }
         else if (autoPid == 0) {
             if (execl("./F4Client", "./F4Client", "bot", NULL) == -1)
                 errExit("Error exec autoplay");
@@ -164,6 +167,7 @@ int main (int argc, char *argv[]) {
     // initialize game variables
     game_data->autoplay = 0;
     game_data->n_played = 0;
+    game_data->server_terminate = 0;
 
     // player signs assignment
     if (game_data->client1_sign == '\0')
@@ -191,6 +195,7 @@ int main (int argc, char *argv[]) {
     while (game_data->n_played<game_data->rows*game_data->cols && !check_win(game_data->rows, game_data->cols, game_matrix));
 
     // terminate connected clients
+    game_data->server_terminate = 1;
     kill(game_data->client1_pid, SIGTERM);
     kill(game_data->client2_pid, SIGTERM);
 

@@ -38,7 +38,7 @@ _Noreturn void F4_game(game_t *game_data, int matrix_game[game_data->rows][game_
         // print current situation of the matrix
         print_game(game_data->rows, game_data->cols, matrix_game, game_data->client1_sign, game_data->client2_sign);
         // column choice by bot
-        if(game_data->autoplay && getpid() == game_data->client2_pid){
+        if (game_data->autoplay && getpid() == game_data->client2_pid){
             do {
                 if (error)
                     printf("Choosen column must be in the game range and not full\n");
@@ -47,7 +47,7 @@ _Noreturn void F4_game(game_t *game_data, int matrix_game[game_data->rows][game_
             } while (error);
         }
         // column choice by human client
-        else{
+        else {
             do {
                 if (error)
                     printf("Choosen column must be in the game range and not full\n");
