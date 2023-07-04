@@ -29,7 +29,6 @@ void clear_terminal() {
     tcsetattr(0, 0, &new);
     atexit(reset_terminal);
 }
-// TODO: vincita in caso di arresa di un client
 
 // functions to close shared memory segments and semaphores on exit
 void close_shmid_data() {
@@ -83,7 +82,8 @@ void sigUsr1Handler(int sig) {
 
 // catches SIGUSR2 (second client connected)
 void sigUsr2Handler(int sig) {
-    printf("%s (%c) is ready to play\n", game_data->client2_username, game_data->client2_sign);
+    if (strcmp(game_data->client2_username, "bot") != 0)
+        printf("%s (%c) is ready to play\n", game_data->client2_username, game_data->client2_sign);
     // alert first client
     kill(game_data->client1_pid, SIGUSR1);
 }
@@ -175,7 +175,6 @@ int main (int argc, char *argv[]) {
 
     // initialize game variables
     game_data->autoplay = 0;
-    game_data->n_played = 0;
     game_data->server_terminate = 0;
 
     // player signs assignment
@@ -207,7 +206,7 @@ int main (int argc, char *argv[]) {
     while (1) {
         semOp(semid,0,-1);
         // check win or full matrix
-        if (game_data->n_played==game_data->rows*game_data->cols || check_win(game_data->rows, game_data->cols, game_matrix)){
+        if ((game_data->win = check_win(game_data->rows, game_data->cols, game_matrix)) != 0){
             // terminate connected clients
             game_data->server_terminate = 1;
             kill(game_data->client1_pid,SIGTERM);

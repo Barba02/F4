@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
+#include <termios.h>
 #include <sys/sem.h>
 #include <sys/stat.h>
 #include "game.h"
@@ -13,6 +14,19 @@
 game_t* game_data; // shared struct containing game data
 int (*game_matrix)[]; // shared game matrix
 int semid; // semaphore set to guarantee mutex and playing alternation
+
+// setting terminal behaviour to not print ^C and restore at the end
+struct termios save;
+void reset_terminal() {
+    tcsetattr(0, 0, &save);
+}
+void clear_terminal() {
+    tcgetattr(0, &save);
+    struct termios new = save;
+    new.c_lflag &= ~ECHOCTL;
+    tcsetattr(0, 0, &new);
+    atexit(reset_terminal);
+}
 
 // functions to deattach shared memory segments on exit
 void deattach_shmid_data() {
@@ -32,12 +46,30 @@ void sigUsr1Handler(int sig) {
 void sigTermHandler(int sig) {
     if (game_data->server_terminate) {
         // server termination game ended
-        if (game_data->client1_pid != -1 && game_data->client2_pid != -1) {
-            // TODO: stampa risultato (vittoria, pareggio, nessuno, caso limite)
+        if (game_data->win != 0) {
+            if ((game_data->last_player == 1 && getpid() == game_data->client2_pid) ||
+                (game_data->last_player == 2 && getpid() == game_data->client1_pid))
+                print_game(game_data->rows, game_data->cols, game_matrix, game_data->client1_sign, game_data->client2_sign);
+            if (game_data->win == 1) {
+                if (game_data->last_player == 1) {
+                    if (getpid() == game_data->client1_pid)
+                        printf("\nYou won\n");
+                    else
+                        printf("\nYou lost\n");
+                }
+                else {
+                    if (getpid() == game_data->client2_pid)
+                        printf("\nYou won\n");
+                    else
+                        printf("\nYou lost\n");
+                }
+            }
+            else
+                printf("\nFull table, game ended\n");
         }
         // server termination double CTRL+C
         else
-            printf("\nServer terminated the game\n");
+            printf("\nServer terminated the game, nobody won\n");
     }
     // other client quit
     else {
@@ -70,6 +102,7 @@ void sigIntHandler(int sig) {
 
 int main(int argc, char *argv[]) {
     // setting SIGINT handling
+    clear_terminal();
     if (signal(SIGINT, sigIntHandler) == SIG_ERR)
         errExit("Cannot change signal handler");
     // setting SIGTERM handling
@@ -123,11 +156,13 @@ int main(int argc, char *argv[]) {
     // first client notify server and wait for the second
     if (getpid() == game_data->client1_pid) {
         kill(game_data->server_pid, SIGUSR1);
+        printf("Your sign is %c\n\n", game_data->client1_sign);
         printf("Waiting for another player...\n");
         pause();
     }
     // second client notify server and wait game start
     else {
+        printf("Your sign is %c\n\n", game_data->client2_sign);
         printf("Waiting for %s to start the game...\n", game_data->client1_username);
         kill(game_data->server_pid, SIGUSR2);
         F4_game(game_data, game_matrix, semid);

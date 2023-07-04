@@ -28,7 +28,7 @@ void print_game(int rows, int cols, int mat[rows][cols], char p1_sign, char p2_s
     printf("-\n");
 }
 
-_Noreturn void F4_game(game_t *game_data, int matrix_game[game_data->rows][game_data->cols], int semid) {
+_Noreturn void F4_game(game_t *game_data, int game_matrix[game_data->rows][game_data->cols], int semid) {
     srand(time(NULL));
     int choice, player, error = 0;
     while (1) {
@@ -36,14 +36,14 @@ _Noreturn void F4_game(game_t *game_data, int matrix_game[game_data->rows][game_
         // player getting his turn on shared memory
         semOp(semid,player,-1);
         // print current situation of the matrix
-        print_game(game_data->rows, game_data->cols, matrix_game, game_data->client1_sign, game_data->client2_sign);
+        print_game(game_data->rows, game_data->cols, game_matrix, game_data->client1_sign, game_data->client2_sign);
         // column choice by bot
         if (game_data->autoplay && getpid() == game_data->client2_pid){
             do {
                 if (error)
                     printf("Choosen column must be in the game range and not full\n");
                 choice = (rand() % game_data->cols) + 1;
-                error = (choice < 1 || choice > game_data->cols || play(game_data, matrix_game, choice, player) == -1);
+                error = (choice < 1 || choice > game_data->cols || play(game_data, game_matrix, choice, player) == -1);
             } while (error);
         }
         // column choice by human client
@@ -53,27 +53,27 @@ _Noreturn void F4_game(game_t *game_data, int matrix_game[game_data->rows][game_
                     printf("Choosen column must be in the game range and not full\n");
                 printf("Insert column number: ");
                 scanf("%d", &choice);
-                error = (choice < 1 || choice > game_data->cols || play(game_data, matrix_game, choice, player) == -1);
+                error = (choice < 1 || choice > game_data->cols || play(game_data, game_matrix, choice, player) == -1);
             } while (error);
         }
         // print matrix after the turn
-        print_game(game_data->rows, game_data->cols, matrix_game, game_data->client1_sign, game_data->client2_sign);
-        printf("Waiting for %s to play...\n", (player == 1) ? game_data->client2_username : game_data->client1_username);
+        print_game(game_data->rows, game_data->cols, game_matrix, game_data->client1_sign, game_data->client2_sign);
+        if (check_win(game_data->rows, game_data->cols, game_matrix) == 0)
+            printf("Waiting for %s to play...\n", (player == 1) ? game_data->client2_username : game_data->client1_username);
         // player freeing server semaphore
         semOp(semid,0,1);
     }
 }
 
-int play(game_t *game_data, int matrix_game[game_data->rows][game_data->cols], int choice, int player) {
+int play(game_t *game_data, int game_matrix[game_data->rows][game_data->cols], int choice, int player) {
     // user input human friendly
     choice--;
     // tracing last player
     game_data->last_player = player;
     // loop through the column from bottom to find first free row
     for (int i = game_data->rows-1; i >= 0; i--) {
-        if (matrix_game[i][choice] == 0) {
-            matrix_game[i][choice] = player;
-            game_data->n_played++;
+        if (game_matrix[i][choice] == 0) {
+            game_matrix[i][choice] = player;
             return 0;
         }
     }
@@ -121,6 +121,11 @@ int check_win(int rows, int cols, int matrix_game[rows][cols]) {
                 return 1;
         }
     }
+    // return 0 if matrix has still free squares
+    for (int col = 0; col < cols; col++) {
+        if (matrix_game[0][col] == 0)
+            return 0;
+    }
     // nobody wins
-    return 0;
+    return 2;
 }
