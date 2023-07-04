@@ -1,25 +1,21 @@
 #include <fcntl.h>
 #include <ctype.h>
-#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
-#include <sys/msg.h>
 #include <termios.h>
-#include <sys/stat.h>
 #include "game.h"
 #include "errExit.h"
 #include "semaphores.h"
-#include "shared_memory.h"
 
-int catcher = 0; // counter to kill the process
-int shmid_data; // shared segment's id for game data
+int catcher = 0; // CTRL+C counter to kill the process
+int shmid_data; // game data shared segment id
 game_t* game_data; // shared struct containing game data
-int shmid_matrix; // shared segment's id for game matrix
-int (*game_matrix)[]; // shared matrix to play
-int semid; // semaphore set to garantee mutex and playing alternance
+int shmid_matrix; // game matrix shared segment id
+int (*game_matrix)[]; // shared game matrix
+int semid; // semaphore set to guarantee mutex and playing alternation
 
 // setting terminal behaviour to not print ^C and restore at the end
 struct termios save;
@@ -35,7 +31,7 @@ void clear_terminal() {
 }
 // TODO: vincita in caso di arresa di un client
 
-// functions to close shared memory segments on exit
+// functions to close shared memory segments and semaphores on exit
 void close_shmid_data() {
     free_shared_memory(game_data);
     remove_shared_memory(shmid_data);
@@ -44,7 +40,6 @@ void close_shmid_matrix() {
     free_shared_memory(game_matrix);
     remove_shared_memory(shmid_matrix);
 }
-// functions to close semaphore set on exit
 void close_semid() {
     remove_sem_set(semid);
 }
@@ -53,36 +48,35 @@ void close_semid() {
 void sigIntHandler(int sig) {
     if (++catcher == 2) {
         // terminate connected clients
-        if(game_data->client1_pid != -1 && game_data->client2_pid != -1){
-            kill(game_data->client1_pid,SIGTERM);
-            kill(game_data->client2_pid,SIGTERM);
-        }
-        exit(0); // TODO: chiusura semafori
+        if (game_data->client1_pid != -1 && game_data->client2_pid != -1){
+            kill(game_data->client1_pid, SIGTERM);
+            kill(game_data->client2_pid, SIGTERM);
+        } // TODO: avviso di terminazione sul client
+        exit(0);
     }
     printf("Press CTRL+C another time to quit\n");
 }
 
-// catches SIGUSR1
+// catches SIGUSR1 (first client connected)
 void sigUsr1Handler(int sig) {
     printf("%s (%c) is ready to play\n", game_data->client1_username, game_data->client1_sign);
-    if(game_data->autoplay){
+    if (game_data->autoplay) {
         pid_t autoPid = fork();
-        if(autoPid == -1){
-            printf("Fork error.\n ");
-        }
-        else if(autoPid == 0) {
-            printf("Fork succeded. \n");
-            if (execl("./F4Client", "./F4Client", "bot", NULL) == -1){
+        // close client if child process cannot be created
+        if (autoPid == -1)
+            kill(game_data->client1_pid, SIGTERM); //TODO: avviso
+        else if (autoPid == 0) {
+            if (execl("./F4Client", "./F4Client", "bot", NULL) == -1)
                 errExit("Error exec autoplay");
-            }
         }
     }
 }
 
-// catches SIGUSR2
+// catches SIGUSR2 (second client connected)
 void sigUsr2Handler(int sig) {
     printf("%s (%c) is ready to play\n", game_data->client2_username, game_data->client2_sign);
-    kill(game_data->client1_pid,SIGUSR1);
+    // alert first client
+    kill(game_data->client1_pid, SIGUSR1);
 }
 
 // signs assignment function
@@ -145,7 +139,7 @@ int main (int argc, char *argv[]) {
     if (signal(SIGUSR2, sigUsr2Handler) == SIG_ERR)
         errExit("Cannot change signal handler");
 
-    // initialize shared memory for game data
+    // initialize game data shared memory
     shmid_data = alloc_shared_memory(sizeof(game_t), GAME_KEY, 1);
     game_data = (game_t*) get_shared_memory(shmid_data);
     atexit(close_shmid_data);
@@ -167,10 +161,9 @@ int main (int argc, char *argv[]) {
         }
     }
 
-    //initialize autoplay
-    game_data->autoplay=0;
-    //initialize play counter
-    game_data->n_played=0;
+    // initialize game variables
+    game_data->autoplay = 0;
+    game_data->n_played = 0;
 
     // player signs assignment
     if (game_data->client1_sign == '\0')
@@ -184,11 +177,11 @@ int main (int argc, char *argv[]) {
     game_data->client2_pid = -1;
 
     // initialize semaphore set
-    unsigned short sem_init_values[]={1,0};   // [0]:player1 turn [1]:player2 turn [2]:mutex
-    semid = create_sem_set(SEM_KEY,2,sem_init_values);
+    unsigned short sem_init_values[]={1, 0};   // [0]:player1 turn [1]:player2 turn [2]:mutex
+    semid = create_sem_set(SEM_KEY, 2, sem_init_values);
     atexit(close_semid);
 
-    // initialize shared memory for game matrix
+    // initialize game matrix shared memory
     shmid_matrix = alloc_shared_memory(sizeof(int[game_data->rows][game_data->cols]), MATRIX_KEY, 1);
     game_matrix = get_shared_memory(shmid_matrix);
     atexit(close_shmid_matrix);
@@ -198,8 +191,8 @@ int main (int argc, char *argv[]) {
     while (game_data->n_played<game_data->rows*game_data->cols && !check_win(game_data->rows, game_data->cols, game_matrix));
 
     // terminate connected clients
-    kill(game_data->client1_pid,SIGTERM);
-    kill(game_data->client2_pid,SIGTERM);
+    kill(game_data->client1_pid, SIGTERM);
+    kill(game_data->client2_pid, SIGTERM);
 
     return 0;
 }
