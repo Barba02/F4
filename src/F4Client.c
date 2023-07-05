@@ -101,6 +101,7 @@ void sigIntHandler(int sig) {
 }
 
 int main(int argc, char *argv[]) {
+
     // setting SIGINT handling
     clear_terminal();
     if (signal(SIGINT, sigIntHandler) == SIG_ERR)
@@ -143,6 +144,12 @@ int main(int argc, char *argv[]) {
     if ((semid = semget(SEM_KEY,3,S_IRUSR | S_IWUSR))== -1)
         errExit("Cannot get semaphores");
 
+    //check if two clients are already connected
+    if(game_data->client1_pid != -1 && game_data->client2_pid != -1)
+    {
+        printf("Cannot connect to the game: Two players are already connected \n");
+        exit(0);
+    }
     // check if this client is user 1 or 2
     if (game_data->client1_pid == -1) {
         game_data->client1_pid = getpid();

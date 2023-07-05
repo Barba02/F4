@@ -204,6 +204,7 @@ int main (int argc, char *argv[]) {
     pause();
 
     while (1) {
+        
         semOp(semid,0,-1);
         // check win or full matrix
         if ((game_data->win = check_win(game_data->rows, game_data->cols, game_matrix)) != 0){
