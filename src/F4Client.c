@@ -74,9 +74,9 @@ void sigTermHandler(int sig) {
     // other client quit
     else {
         if (game_data->client1_pid == -1)
-            printf("\n%s quit, you won\n", game_data->client1_username);
+            printf("\n\n%s quit, you won\n", game_data->client1_username);
         else if (game_data->client2_pid == -1)
-            printf("\n%s quit, you won\n", game_data->client2_username);
+            printf("\n\n%s quit, you won\n", game_data->client2_username);
     }
     exit(0);
 }
@@ -86,17 +86,15 @@ void sigIntHandler(int sig) {
     // first client quit
     if (getpid() == game_data->client1_pid) {
         game_data->client1_pid = -1;
-        if (game_data->client2_pid != -1)
-            kill(game_data->client2_pid, SIGTERM);
+        kill(game_data->server_pid, SIGUSR1);
     }
     // second client quit
     else {
         game_data->client2_pid = -1;
-        kill(game_data->client1_pid, SIGTERM);
+        kill(game_data->server_pid, SIGUSR2);
     }
-    // terminate also server
-    printf("\nYou quit and lost the game\n");
-    kill(game_data->server_pid, SIGTERM);
+    // close the process
+    printf("\n\nYou quit and lost the game\n");
     exit(0);
 }
 

@@ -63,25 +63,40 @@ void sigIntHandler(int sig) {
     printf("Press CTRL+C another time to quit\n");
 }
 
-// catches SIGUSR1 (first client connected)
+// catches SIGUSR1
 void sigUsr1Handler(int sig) {
-    printf("%s (%c) is ready to play\n", game_data->client1_username, game_data->client1_sign);
-    if (game_data->autoplay) {
-        pid_t autoPid = fork();
-        // close client if child process cannot be created
-        if (autoPid == -1) {
-            game_data->server_terminate = 1;
-            kill(game_data->client1_pid, SIGTERM);
+    // first client quit
+    if (game_data->client1_pid == -1) {
+        if (game_data->client2_pid != -1) {
+            kill(game_data->client2_pid, SIGTERM);
+            exit(0);
         }
-        else if (autoPid == 0) {
-            if (execl("./F4Client", "./F4Client", "bot", NULL) == -1)
-                errExit("Error exec autoplay");
+    }
+    // first client connected
+    else {
+        printf("%s (%c) is ready to play\n", game_data->client1_username, game_data->client1_sign);
+        if (game_data->autoplay) {
+            pid_t autoPid = fork();
+            // close client if child process cannot be created
+            if (autoPid == -1) {
+                game_data->server_terminate = 1;
+                kill(game_data->client1_pid, SIGTERM);
+            } else if (autoPid == 0) {
+                if (execl("./F4Client", "./F4Client", "bot", NULL) == -1)
+                    errExit("Error exec autoplay");
+            }
         }
     }
 }
 
-// catches SIGUSR2 (second client connected)
+// catches SIGUSR2
 void sigUsr2Handler(int sig) {
+    // second client quit
+    if (game_data->client2_pid == -1) {
+        kill(game_data->client1_pid, SIGTERM);
+        exit(0);
+    }
+    // second client connected
     if (strcmp(game_data->client2_username, "bot") != 0)
         printf("%s (%c) is ready to play\n", game_data->client2_username, game_data->client2_sign);
     // alert first client
