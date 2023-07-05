@@ -5,7 +5,7 @@
 #include "semaphores.h"
 
 // print game matrix
-void print_game(int rows, int cols, int mat[rows][cols], char p1_sign, char p2_sign) {
+void print_game(int rows, int cols, int mat[rows][cols], char signs[]) {
     // print cols numeration
     printf("\n");
     for (int i = 0; i < cols; i++)
@@ -18,7 +18,7 @@ void print_game(int rows, int cols, int mat[rows][cols], char p1_sign, char p2_s
             if (mat[i][j] == 0)
                 printf("   |");
             else
-                printf(" %c |", (mat[i][j] == 1) ? p1_sign : p2_sign);
+                printf(" %c |", signs[(mat[i][j] + 1) % 2]);
         }
         printf("\n");
     }
@@ -32,13 +32,13 @@ _Noreturn void F4_game(game_t *game_data, int game_matrix[game_data->rows][game_
     srand(time(NULL));
     int choice, player, error = 0;
     while (1) {
-        player = (getpid() == game_data->client1_pid) ? 1 : 2;
+        player = (getpid() == game_data->client_pid[0]) ? 1 : 2;
         // player getting his turn on shared memory
         semOp(semid,player,-1);
         // print current situation of the matrix
-        print_game(game_data->rows, game_data->cols, game_matrix, game_data->client1_sign, game_data->client2_sign);
+        print_game(game_data->rows, game_data->cols, game_matrix, game_data->client_sign);
         // column choice by bot
-        if (game_data->autoplay && getpid() == game_data->client2_pid){
+        if (game_data->autoplay && getpid() == game_data->client_pid[1]){
             do {
                 if (error)
                     printf("Choosen column must be in the game range and not full\n");
@@ -57,9 +57,9 @@ _Noreturn void F4_game(game_t *game_data, int game_matrix[game_data->rows][game_
             } while (error);
         }
         // print matrix after the turn
-        print_game(game_data->rows, game_data->cols, game_matrix, game_data->client1_sign, game_data->client2_sign);
+        print_game(game_data->rows, game_data->cols, game_matrix, game_data->client_sign);
         if (check_win(game_data->rows, game_data->cols, game_matrix) == 0)
-            printf("Waiting for %s to play...\n", (player == 1) ? game_data->client2_username : game_data->client1_username);
+            printf("Waiting for %s to play...\n", game_data->client_username[player % 2]);
         // player freeing server semaphore
         semOp(semid,0,1);
     }

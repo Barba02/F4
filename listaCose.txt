@@ -13,4 +13,3 @@
 -chiusura memorie/semafori se client si chiude improvvisamente (on_exit)
 -il client controlla che esista la memoria condivisa altrimenti la crea e non la elimina
 -gestire autoplay nel secondo player
-- se il primo giocatore abbandona prima che arrivi il secondo, può connettersi un altro

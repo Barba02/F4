@@ -38,7 +38,7 @@ void deattach_shmid_matrix() {
 
 // catches SIGUSR1 (start game after other player arrived)
 void sigUsr1Handler(int sig) {
-    printf("You are playing against %s\n", game_data->client2_username);
+    printf("You are playing against %s\n", game_data->client_username[1]);
     F4_game(game_data, game_matrix, semid);
 }
 
@@ -47,59 +47,39 @@ void sigTermHandler(int sig) {
     if (game_data->server_terminate) {
         // server termination game ended
         if (game_data->win != 0) {
-            if ((game_data->last_player == 1 && getpid() == game_data->client2_pid) ||
-                (game_data->last_player == 2 && getpid() == game_data->client1_pid))
-                print_game(game_data->rows, game_data->cols, game_matrix, game_data->client1_sign, game_data->client2_sign);
+            if (getpid() == game_data->client_pid[game_data->last_player % 2])
+                print_game(game_data->rows, game_data->cols, game_matrix, game_data->client_sign);
             if (game_data->win == 1) {
-                if (game_data->last_player == 1) {
-                    if (getpid() == game_data->client1_pid)
-                        printf("\nYou won\n");
-                    else
-                        printf("\nYou lost\n");
-                }
-                else {
-                    if (getpid() == game_data->client2_pid)
-                        printf("\nYou won\n");
-                    else
-                        printf("\nYou lost\n");
-                }
+                if (getpid() == game_data->client_pid[(game_data->last_player + 1) % 2])
+                    printf("\nYou won\n");
+                else
+                    printf("\nYou lost\n");
             }
             else
                 printf("\nFull table, game ended\n");
         }
         // server termination double CTRL+C
         else
-            printf("\nServer terminated the game, nobody won\n");
+            printf("\n\nServer terminated the game, nobody won\n");
     }
     // other client quit
-    else {
-        if (game_data->client1_pid == -1)
-            printf("\n\n%s quit, you won\n", game_data->client1_username);
-        else if (game_data->client2_pid == -1)
-            printf("\n\n%s quit, you won\n", game_data->client2_username);
-    }
+    else
+        printf("\n\n%s quit, you won\n", game_data->client_username[(game_data->client_pid[0] == -1) ? 0 : 1]);
     exit(0);
 }
 
 // catches SIGINT and manage closing
 void sigIntHandler(int sig) {
-    // first client quit
-    if (getpid() == game_data->client1_pid) {
-        game_data->client1_pid = -1;
-        kill(game_data->server_pid, SIGUSR1);
-    }
-    // second client quit
-    else {
-        game_data->client2_pid = -1;
-        kill(game_data->server_pid, SIGUSR2);
-    }
+    // select which process is quitting
+    int i = (getpid() == game_data->client_pid[0]) ? 0 : 1;
+    game_data->client_pid[i] = -1;
+    kill(game_data->server_pid, (i == 0) ? SIGUSR1 : SIGUSR2);
     // close the process
     printf("\n\nYou quit and lost the game\n");
     exit(0);
 }
 
 int main(int argc, char *argv[]) {
-
     // setting SIGINT handling
     clear_terminal();
     if (signal(SIGINT, sigIntHandler) == SIG_ERR)
@@ -143,32 +123,28 @@ int main(int argc, char *argv[]) {
         errExit("Cannot get semaphores");
 
     //check if two clients are already connected
-    if(game_data->client1_pid != -1 && game_data->client2_pid != -1)
-    {
+    if (game_data->client_pid[0] != -1 && game_data->client_pid[1] != -1) {
         printf("Cannot connect to the game: Two players are already connected \n");
         exit(0);
     }
-    // check if this client is user 1 or 2
-    if (game_data->client1_pid == -1) {
-        game_data->client1_pid = getpid();
-        strcpy(game_data->client1_username, argv[1]);
-    }
-    else {
-        game_data->client2_pid = getpid();
-        strcpy(game_data->client2_username, argv[1]);
-    }
+
+    // set pid and user to correct client
+    int client = -1;
+    while (game_data->client_pid[++client] != -1);
+    game_data->client_pid[client] = getpid();
+    strcpy(game_data->client_username[client], argv[1]);
 
     // first client notify server and wait for the second
-    if (getpid() == game_data->client1_pid) {
+    if (client == 0) {
         kill(game_data->server_pid, SIGUSR1);
-        printf("Your sign is %c\n\n", game_data->client1_sign);
+        printf("Your sign is %c\n\n", game_data->client_sign[0]);
         printf("Waiting for another player...\n");
         pause();
     }
     // second client notify server and wait game start
     else {
-        printf("Your sign is %c\n\n", game_data->client2_sign);
-        printf("Waiting for %s to start the game...\n", game_data->client1_username);
+        printf("Your sign is %c\n\n", game_data->client_sign[1]);
+        printf("Waiting for %s to start the game...\n", game_data->client_username[0]);
         kill(game_data->server_pid, SIGUSR2);
         F4_game(game_data, game_matrix, semid);
     }

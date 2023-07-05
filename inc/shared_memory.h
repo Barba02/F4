@@ -8,16 +8,13 @@
 
 typedef struct game {
     pid_t server_pid;
-    pid_t client1_pid;
-    pid_t client2_pid;
+    pid_t client_pid[2];
+    char client_sign[2];
+    char client_username[2][64];
+    int win;
     int rows;
     int cols;
     int autoplay;
-    char client1_sign;
-    char client2_sign;
-    char client1_username[25];
-    char client2_username[25];
-    int win;
     int last_player;
     int server_terminate;
 } game_t;

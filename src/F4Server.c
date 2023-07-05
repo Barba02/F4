@@ -43,21 +43,14 @@ void close_semid() {
     remove_sem_set(semid);
 }
 
-// catches SIGTERM and manage closing
-void sigTermHandler(int sig) {
-    printf("Client quit\n");
-    exit(0);
-}
-
 // catches SIGINT and manage closing
 void sigIntHandler(int sig) {
     if (++catcher == 2) {
         // terminate connected clients
         game_data->server_terminate = 1;
-        if (game_data->client1_pid != -1)
-            kill(game_data->client1_pid, SIGTERM);
-        if (game_data->client2_pid != -1)
-            kill(game_data->client2_pid, SIGTERM);
+        for (int i = 0; i < 2; i++)
+            if (game_data->client_pid[i] != -1)
+                kill(game_data->client_pid[i], SIGTERM);
         exit(0);
     }
     printf("Press CTRL+C another time to quit\n");
@@ -65,23 +58,24 @@ void sigIntHandler(int sig) {
 
 // catches SIGUSR1
 void sigUsr1Handler(int sig) {
+    // TODO: se il primo giocatore abbandona prima che arrivi il secondo, può connettersi un altro
     // first client quit
-    if (game_data->client1_pid == -1) {
-        if (game_data->client2_pid != -1) {
-            kill(game_data->client2_pid, SIGTERM);
-            exit(0);
-        }
+    if (game_data->client_pid[0] == -1) {
+        if (game_data->client_pid[1] != -1)
+            kill(game_data->client_pid[1], SIGTERM);
+        exit(0);
     }
     // first client connected
     else {
-        printf("%s (%c) is ready to play\n", game_data->client1_username, game_data->client1_sign);
+        printf("%s (%c) is ready to play\n", game_data->client_username[0], game_data->client_sign[0]);
         if (game_data->autoplay) {
             pid_t autoPid = fork();
             // close client if child process cannot be created
             if (autoPid == -1) {
                 game_data->server_terminate = 1;
-                kill(game_data->client1_pid, SIGTERM);
-            } else if (autoPid == 0) {
+                kill(game_data->client_pid[0], SIGTERM);
+            }
+            else if (autoPid == 0) {
                 if (execl("./F4Client", "./F4Client", "bot", NULL) == -1)
                     errExit("Error exec autoplay");
             }
@@ -92,21 +86,23 @@ void sigUsr1Handler(int sig) {
 // catches SIGUSR2
 void sigUsr2Handler(int sig) {
     // second client quit
-    if (game_data->client2_pid == -1) {
-        kill(game_data->client1_pid, SIGTERM);
+    if (game_data->client_pid[1] == -1) {
+        kill(game_data->client_pid[0], SIGTERM);
         exit(0);
     }
     // second client connected
-    if (strcmp(game_data->client2_username, "bot") != 0)
-        printf("%s (%c) is ready to play\n", game_data->client2_username, game_data->client2_sign);
+    if (strcmp(game_data->client_username[1], "bot") == 0)
+        printf("Server playing as second client\n");
+    else
+        printf("%s (%c) is ready to play\n", game_data->client_username[1], game_data->client_sign[1]);
     // alert first client
-    kill(game_data->client1_pid, SIGUSR1);
+    kill(game_data->client_pid[0], SIGUSR1);
 }
 
 // signs assignment function
 char random_char() {
     // if X has already given to p1 or chosen by the user, returns O
-    if (toupper(game_data->client1_sign) == 'X')
+    if (toupper(game_data->client_sign[0]) == 'X')
         return 'O';
     // return X in the other cases
     return 'X';
@@ -139,13 +135,13 @@ int chk_args(int n, char** args) {
     if (n >= 4) {
         if (!chk_string_arg(args[3]))
             return 2;
-        game_data->client1_sign = *args[3];
+        game_data->client_sign[0] = *args[3];
     }
     // check optional player2 sign
     if (n == 5) {
         if (!chk_string_arg(args[4]))
             return 2;
-        game_data->client2_sign = *args[4];
+        game_data->client_sign[1] = *args[4];
     }
     // arguments are ok
     return 0;
@@ -155,9 +151,6 @@ int main (int argc, char *argv[]) {
     // setting SIGINT handling
     clear_terminal();
     if (signal(SIGINT, sigIntHandler) == SIG_ERR)
-        errExit("Cannot change signal handler");
-    // setting SIGTERM handling
-    if (signal(SIGTERM, sigTermHandler) == SIG_ERR)
         errExit("Cannot change signal handler");
     // setting SIGUSR1 handling
     if (signal(SIGUSR1, sigUsr1Handler) == SIG_ERR)
@@ -193,15 +186,15 @@ int main (int argc, char *argv[]) {
     game_data->server_terminate = 0;
 
     // player signs assignment
-    if (game_data->client1_sign == '\0')
-        game_data->client1_sign = random_char();
-    if (game_data->client2_sign == '\0')
-        game_data->client2_sign = random_char();
+    if (game_data->client_sign[0] == '\0')
+        game_data->client_sign[0] = random_char();
+    if (game_data->client_sign[1] == '\0')
+        game_data->client_sign[1] = random_char();
 
     // initialize pids in shared struct
     game_data->server_pid = getpid();
-    game_data->client1_pid = -1;
-    game_data->client2_pid = -1;
+    game_data->client_pid[0] = -1;
+    game_data->client_pid[1] = -1;
 
     // initialize semaphore set
     unsigned short sem_init_values[]={0,1,0};   // [0]:server [1]:player1 turn [2]:player2 turn
@@ -218,16 +211,14 @@ int main (int argc, char *argv[]) {
     // waiting SIGUSR2
     pause();
 
-    while (1) {
-        
+    while (!game_data->server_terminate) {
         semOp(semid,0,-1);
         // check win or full matrix
         if ((game_data->win = check_win(game_data->rows, game_data->cols, game_matrix)) != 0){
             // terminate connected clients
             game_data->server_terminate = 1;
-            kill(game_data->client1_pid,SIGTERM);
-            kill(game_data->client2_pid,SIGTERM);
-            break;
+            for (int i = 0; i < 2; i++)
+                kill(game_data->client_pid[i], SIGTERM);
         }
         else {
             if (game_data->last_player == 1)

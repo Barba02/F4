@@ -3,7 +3,7 @@
 
 #include "shared_memory.h"
 
-void print_game(int rows, int cols, int mat[rows][cols], char  p1_sign, char p2_sign);
+void print_game(int rows, int cols, int mat[rows][cols], char signs[]);
 
 _Noreturn void F4_game(game_t *game_data, int game_matrix[game_data->rows][game_data->cols], int semid);
 /*
