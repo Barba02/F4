@@ -1,9 +1,3 @@
-/************************************
-*VR472408,VR471509,VR446245
-*Barbieri Filippo,Brighenti Alessio,Taouri Islam
-*07/07/2023
-*************************************/
-
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
@@ -42,9 +36,17 @@ void deattach_shmid_matrix() {
     free_shared_memory(game_matrix);
 }
 
+// catches the end of the timeout and pass the turn
+void sigAlrmHandler(int sig) {
+    printf("\n\nTime out, you lost\n\n");
+    int player = (getpid() == game_data->client_pid[0]) ? 1 : 0;
+    kill(game_data->client_pid[player], SIGTERM);
+    kill(game_data->server_pid, SIGTERM);
+    exit(0);
+}
+
 // catches SIGUSR1 (start game after other player arrived)
 void sigUsr1Handler(int sig) {
-    printf("You are playing against %s\n", game_data->client_username[1]);
     F4_game(game_data, game_matrix, semid);
 }
 
@@ -68,9 +70,15 @@ void sigTermHandler(int sig) {
         else
             printf("\n\nServer terminated the game, nobody won\n");
     }
-    // other client quit
-    else
-        printf("\n\n%s quit, you won\n", game_data->client_username[(game_data->client_pid[0] == -1) ? 0 : 1]);
+    else {
+        int player = (getpid() == game_data->client_pid[0]) ? 1 : 0;
+        // other client quit
+        if (game_data->client_pid[0] == -1 || game_data->client_pid[1] == -1)
+            printf("\n\n%s quit, you won\n", game_data->client_username[player]);
+        // other client timed out
+        else
+            printf("\n\n%s timed out, you won\n\n", game_data->client_username[player]);
+    }
     exit(0);
 }
 
@@ -95,6 +103,9 @@ int main(int argc, char *argv[]) {
         errExit("Cannot change signal handler");
     // setting SIGUSR1 handling
     if (signal(SIGUSR1, sigUsr1Handler) == SIG_ERR)
+        errExit("Cannot change signal handler");
+    // setting SIGALRM handling
+    if (signal(SIGALRM, sigAlrmHandler) == SIG_ERR)
         errExit("Cannot change signal handler");
 
     // attaching to game data shared memory
@@ -139,13 +150,6 @@ int main(int argc, char *argv[]) {
     while (game_data->client_pid[++client] != -1);
     game_data->client_pid[client] = getpid();
     strcpy(game_data->client_username[client], argv[1]);
-
-    if(getpid() == game_data->client_pid[1] && argc == 3 && strcmp(argv[2],"1") == 0){
-        printf("Cannot play in autoplay mode: First player is already connected \n");
-        game_data->client_pid[1] = -1;
-        game_data->autoplay = 0;
-        exit(0);
-    }
 
     // first client notify server and wait for the second
     if (client == 0) {

@@ -1,17 +1,14 @@
-/************************************
-*VR472408,VR471509,VR446245
-*Barbieri Filippo,Brighenti Alessio,Taouri Islam
-*07/07/2023
-*************************************/
-
 #include <stdio.h>
 #include <unistd.h>
 #include <time.h>
 #include "game.h"
 #include "semaphores.h"
 
+#define TURN_TIMEOUT 30
+
 // print game matrix
 void print_game(int rows, int cols, int mat[rows][cols], char signs[]) {
+    system("clear");
     // print cols numeration
     printf("\n");
     for (int i = 0; i < cols; i++)
@@ -41,6 +38,8 @@ _Noreturn void F4_game(game_t *game_data, int game_matrix[game_data->rows][game_
         player = (getpid() == game_data->client_pid[0]) ? 1 : 2;
         // player getting his turn on shared memory
         semOp(semid,player,-1);
+        // set timeout
+        alarm(TURN_TIMEOUT);
         // print current situation of the matrix
         print_game(game_data->rows, game_data->cols, game_matrix, game_data->client_sign);
         // column choice by bot
@@ -62,6 +61,8 @@ _Noreturn void F4_game(game_t *game_data, int game_matrix[game_data->rows][game_
                 error = (choice < 1 || choice > game_data->cols || play(game_data, game_matrix, choice, player) == -1);
             } while (error);
         }
+        // reset timeout
+        alarm(0);
         // print matrix after the turn
         print_game(game_data->rows, game_data->cols, game_matrix, game_data->client_sign);
         if (check_win(game_data->rows, game_data->cols, game_matrix) == 0)

@@ -1,9 +1,3 @@
-/************************************
-*VR472408,VR471509,VR446245
-*Barbieri Filippo,Brighenti Alessio,Taouri Islam
-*07/07/2023
-*************************************/
-
 #include <fcntl.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -47,6 +41,11 @@ void close_shmid_matrix() {
 }
 void close_semid() {
     remove_sem_set(semid);
+}
+
+// catches SIGTERM and manage closing
+void sigTermHandler(int sig) {
+    exit(0);
 }
 
 // catches SIGINT and manage closing
@@ -157,6 +156,9 @@ int main (int argc, char *argv[]) {
     // setting SIGINT handling
     clear_terminal();
     if (signal(SIGINT, sigIntHandler) == SIG_ERR)
+        errExit("Cannot change signal handler");
+    // setting SIGTERM handling
+    if (signal(SIGTERM, sigTermHandler) == SIG_ERR)
         errExit("Cannot change signal handler");
     // setting SIGUSR1 handling
     if (signal(SIGUSR1, sigUsr1Handler) == SIG_ERR)
