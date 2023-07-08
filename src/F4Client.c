@@ -1,3 +1,9 @@
+/************************************
+*VR472408,VR471509,VR446245
+*Barbieri Filippo,Brighenti Alessio,Taouri Islam
+*07/07/2023
+*************************************/
+
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
@@ -150,6 +156,15 @@ int main(int argc, char *argv[]) {
     while (game_data->client_pid[++client] != -1);
     game_data->client_pid[client] = getpid();
     strcpy(game_data->client_username[client], argv[1]);
+
+    //
+    if(getpid() == game_data->client_pid[1] && argc == 3 && strcmp(argv[2],"1") == 0){
+        printf("Cannot play in autoplay mode: First player is already connected \n");
+        game_data->client_pid[1] = -1;
+        game_data->autoplay = 0;
+        exit(0);
+    }
+
 
     // first client notify server and wait for the second
     if (client == 0) {
