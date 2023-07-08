@@ -1,3 +1,9 @@
+/************************************
+*VR472408,VR471509,VR446245
+*Barbieri Filippo,Brighenti Alessio,Taouri Islam
+*07/07/2023
+*************************************/
+
 #include <fcntl.h>
 #include <ctype.h>
 #include <stdio.h>
