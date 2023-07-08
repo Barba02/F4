@@ -49,11 +49,6 @@ void close_semid() {
     remove_sem_set(semid);
 }
 
-// catches SIGTERM and manage closing
-void sigTermHandler(int sig) {
-    exit(0);
-}
-
 // catches SIGINT and manage closing
 void sigIntHandler(int sig) {
     if (++catcher == 2) {
@@ -69,7 +64,6 @@ void sigIntHandler(int sig) {
 
 // catches SIGUSR1
 void sigUsr1Handler(int sig) {
-    // TODO: se il primo giocatore abbandona prima che arrivi il secondo, può connettersi un altro
     // first client quit
     if (game_data->client_pid[0] == -1) {
         if (game_data->client_pid[1] != -1)
@@ -162,9 +156,6 @@ int main (int argc, char *argv[]) {
     // setting SIGINT handling
     clear_terminal();
     if (signal(SIGINT, sigIntHandler) == SIG_ERR)
-        errExit("Cannot change signal handler");
-    // setting SIGTERM handling
-    if (signal(SIGTERM, sigTermHandler) == SIG_ERR)
         errExit("Cannot change signal handler");
     // setting SIGUSR1 handling
     if (signal(SIGUSR1, sigUsr1Handler) == SIG_ERR)

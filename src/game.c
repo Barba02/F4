@@ -14,7 +14,6 @@
 
 // print game matrix
 void print_game(int rows, int cols, int mat[rows][cols], char signs[]) {
-    system("clear");
     // print cols numeration
     printf("\n");
     for (int i = 0; i < cols; i++)
@@ -48,25 +47,18 @@ _Noreturn void F4_game(game_t *game_data, int game_matrix[game_data->rows][game_
         alarm(TURN_TIMEOUT);
         // print current situation of the matrix
         print_game(game_data->rows, game_data->cols, game_matrix, game_data->client_sign);
-        // column choice by bot
-        if (game_data->autoplay && getpid() == game_data->client_pid[1]){
-            do {
-                if (error)
-                    printf("Choosen column must be in the game range and not full\n");
+        // column choice
+        do {
+            if (error)
+                printf("Choosen column must be in the game range and not full\n");
+            if (game_data->autoplay && getpid() == game_data->client_pid[1])
                 choice = (rand() % game_data->cols) + 1;
-                error = (choice < 1 || choice > game_data->cols || play(game_data, game_matrix, choice, player) == -1);
-            } while (error);
-        }
-        // column choice by human client
-        else {
-            do {
-                if (error)
-                    printf("Choosen column must be in the game range and not full\n");
+            else {
                 printf("Insert column number: ");
                 scanf("%d", &choice);
-                error = (choice < 1 || choice > game_data->cols || play(game_data, game_matrix, choice, player) == -1);
-            } while (error);
-        }
+            }
+            error = (choice < 1 || choice > game_data->cols || play(game_data, game_matrix, choice, player) == -1);
+        } while (error);
         // reset timeout
         alarm(0);
         // print matrix after the turn
