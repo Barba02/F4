@@ -1,15 +1,5 @@
--chiave hardcoded per controllo campi precedenti
--quando un segnale viene gestito, viene poi resettato al suo comportamento inziale https://stackoverflow.com/questions/75176945/why-is-my-signal-handler-not-working-when-i-send-two-sigint-signals-ctrl-c
--chiedere al prof per ./F4Client username *
--capire come passare la matrice di gioco da un processo all'altro (malloc probabilmente alloca solo per server e client non vede)
--aggiunta dei pid nella shared memory perchè servono per i segnali, nel server inizializzo a -1 i pid dei client cosi poi riesco a fare distinzione tra primo e secondo client
--* aggiungere controllo che non si possano collegare più di due giocatori alla volta (lista di struct game_t)
--aggiungere variabile (forse nella struct) per monitorare quanti utenti sono connessi in un preciso momento aggiornata dal server nel momento in cui viene notificato del collegamento/scollegamento
--il server si chiude se tra un ctrl+c e l'altro viene premuto altro?
--nella struct game gli username hanno dimensione fissa senò segfault
--controllo della vittoria/pareggio essere fatto sul server
--quando termina il server terminano anche il client (manca ancora la distinzione tra terminazione esterna o vittoria/pareggio)
--aggiunto controllo se pid dei client sono stati settati allora faccio kill altrimenti no, senò crasha
--chiusura memorie/semafori se client si chiude improvvisamente (on_exit)
--il client controlla che esista la memoria condivisa altrimenti la crea e non la elimina
--gestire autoplay nel secondo player
+- chiave hardcoded per controllo campi precedenti e per gestire più comodamente l'attach
+- esecuzione di F4Client con autoplay inserendo 1 come secondo parametro
+- il server si chiude se tra un ctrl+c e l'altro viene premuto altro?
+- inizializzando i pid a -1, qualunque volta in cui si cerca di killare il processo, prima viene controllato se il pid è diverso da -1
+- funzioni di chiusura con atexit() in modo che vengano sempre eseguite
