@@ -46,6 +46,7 @@ void deattach_shmid_matrix() {
 void sigAlrmHandler(int sig) {
     printf("\n\nTime out, you lost\n\n");
     int player = (getpid() == game_data->client_pid[0]) ? 1 : 0;
+    game_data->client_pid[(player + 1) % 2] = -1;
     kill(game_data->client_pid[player], SIGTERM);
     kill(game_data->server_pid, SIGTERM);
     exit(0);
