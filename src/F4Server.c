@@ -149,7 +149,7 @@ int chk_args(int n, char** args) {
     }
     // check optional player2 sign
     if (n == 5) {
-        if (!chk_string_arg(args[4]))
+        if (!chk_string_arg(args[4]) || args[4][0] == args[3][0])
             return 2;
         game_data->client_sign[1] = *args[4];
     }
@@ -189,7 +189,7 @@ int main (int argc, char *argv[]) {
             printf("Rows and columns arguments must be numbers greater or equal to 5\n");
             return 1;
         case 2:
-            printf("Player signs must be single characters, excluded '|', '-', '_', ' '\n");
+            printf("Player signs must be two different single characters, excluded '|', '-', '_', ' '\n");
             return 1;
         }
     }
